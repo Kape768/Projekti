@@ -15,7 +15,7 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: Higher Or Lower
+      MYSQL_DATABASE: Higher_Or_Lower
       MYSQL_USER: user
       MYSQL_PASSWORD: pass
     ports:
