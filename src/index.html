@@ -12,9 +12,9 @@
         body {
             font-family: Arial, sans-serif;
             background-color: #1a1a1a;
-            color: #ffffff;
+            color: #C88A39;
             margin: 0;
-            padding: 30px 20px;
+            padding: 25px 25px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -26,19 +26,19 @@
         header {
             text-align: center;
             margin-top: 10px;
-            margin-bottom: 40px;
-            background-color: rgba(0, 0, 0, 0.55);
-            padding: 15px 35px;
-            border-radius: 12px;
+            margin-bottom: 0px;
+            background-color: rgba(0, 0, 0, 0.75);
+            padding: 50px 50px;
+            border-radius: 24px;
         }
         h1 {
             font-size: 2.8rem;
             margin: 0 0 10px 0;
-            color: #ffffff;
+            color: #C88A39;
             text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.9);
         }
         header p {
-            color: #f0f0f0;
+            color: #C88A39;
             font-size: 1.15rem;
             margin: 0;
             text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.9);
@@ -54,36 +54,36 @@
         }
         /* Pelikortin tyylit */
         .game-card {
-            background-color: rgba(35, 35, 35, 0.92);
+            background-color: rgba(0, 0, 0, 0.75);
             border-radius: 16px;
-            padding: 55px 45px;
+            padding: 100px 50px;
             width: 100%;
-            max-width: 600px;
+            max-width: 750px;
             text-align: center;
             border: 2px solid #444;
             transition: transform 0.2s, border-color 0.2s;
         }
         /* Hover-efekti pelikortille */
         .game-card:hover {
-            transform: translateY(-5px);
-            border-color: #4CAF50;
+            transform: translateY(10px);
+            border-color: #FF9EBA;
         }
         /* Pelikortin otsikon ja kuvauksen tyylit */
         .game-card h3 {
             margin-top: 0;
-            font-size: 2.3rem;
+            font-size: 3.0rem;
         }
         /* Pelikortin kuvauksen tyylit */
         .game-card p {
-            color: #cccccc;
-            font-size: 1.3rem;
+            color: #C88A39;
+            font-size: 1.5rem;
             margin-bottom: 25px;
         }
         /* Pelaa-painikkeen tyylit */
         .btn {
             display: inline-block;
-            background-color: #4CAF50;
-            color: white;
+            background-color: #ff5988;
+            color: #ffffff;
             padding: 16px 45px;
             text-decoration: none;
             border-radius: 8px;
@@ -94,23 +94,26 @@
         }
         /* Hover-efekti pelaa-painikkeelle */
         .btn:hover {
-            background-color: #45a049;
+            background-color: #ff4e80;
         }
-        /* Taustakuva ja overlay-efekti */
-        .bg-image {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('eiffel-torni.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            transform: scale(1.1);
-            z-index: -2;
-            filter: blur(2px) brightness(130%);
-        }
+      /* Taustakuva ja overlay-efekti */
+     .bg-image {
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     background-image: url('eiffel.webp');
+     background-size: cover;
+        
+    
+     background-position: center top; 
+  
+     background-repeat: no-repeat;
+     background-color: #000;
+     z-index: -2;
+     filter: blur(0px) brightness(100%);
+}
         /* Overlay-efekti taustakuvan päällä */
         .bg-overlay {
             position: fixed;
@@ -118,8 +121,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.4); 
-            z-index: -1;
+            background-color: rgba(255, 255, 255, 0.03); 
+            z-index: -1
         }
     </style>
 </head>
@@ -128,13 +131,12 @@
     <div class="bg-overlay"></div>
     <header>
         <h1>Pelikeskus</h1>
-        <p>Valitse alta peli ja aloita pelaaminen!</p>
     </header>
 
     <main class="game-grid">
         <div class="game-card">
-            <h3>Lower or Higher</h3>
-            <p>Arvaa, onko seuraava isompi vai pienempi!</p>
+            <h3>Suurempi Vai Pienempi</h3>
+            <p>Paina pelaa-painiketta aloittaaksesi pelaamisen!</p>
             <a href="lower-higher.html" class="btn">Pelaa</a>
         </div>
     </main>
