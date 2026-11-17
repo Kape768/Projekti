@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suurempi vai pienempi - Pelivalikko</title>
+  <style>
+    :root {
+      --bg-dark: #070e1a;
+      --card-bg: #ffffff;
+      --text-dark: #1e293b;
+      --text-muted: #475569;
+      --accent-teal: #007A78;
+      --accent-pink: #FFA4BC;
+      --accent-bronze: #C88A39;
+      --badge-red: #dc2626;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-dark);
+      color: #ffffff;
+      padding: 40px 24px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .back-btn {
+      background-color: var(--accent-teal);
+      color: #fff;
+      text-decoration: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background-color 0.2s ease, transform 0.15s ease;
+    }
+
+    .back-btn:hover {
+      background-color: #005f5d;
+      transform: translateY(-1px);
+    }
+
+    /* Korttiruudukko (6 korttia vierekkäin isolla näytöllä) */
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+      gap: 18px;
+    }
+
+    .game-card {
+      background-color: var(--card-bg);
+      border-radius: 6px;
+      overflow: hidden;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      border-bottom: 4px solid var(--badge-red);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .game-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.6);
+    }
+
+    /* Kortin yläosa (korvaa kuvat tyylikkäillä taustoilla ja ikoneilla) */
+    .card-banner {
+      height: 185px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 56px;
+      user-select: none;
+    }
+
+    .badge {
+      position: absolute;
+      top: 12px;
+      left: 0;
+      background-color: var(--badge-red);
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      padding: 5px 10px;
+      text-transform: uppercase;
+      border-top-right-radius: 3px;
+      border-bottom-right-radius: 3px;
+      box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .badge.new {
+      background-color: var(--accent-teal);
+    }
+
+    /* Kortin alaosa (teksti) */
+    .card-content {
+      padding: 16px 14px 18px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-title {
+      color: var(--badge-red);
+      font-size: 14px;
+      font-weight: 800;
+      font-style: italic;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      line-height: 1.25;
+    }
+
+    .card-desc {
+      color: var(--text-muted);
+      font-size: 12.5px;
+      line-height: 1.45;
+    }
+
+    /* Erikoiskortti (kuten kuvan ensimmäinen tumma teemakortti) */
+    .game-card.featured {
+      background-color: #121212;
+      border: 1px solid var(--accent-bronze);
+      border-bottom: 4px solid var(--accent-bronze);
+    }
+
+    .game-card.featured .badge {
+      background-color: var(--accent-bronze);
+      color: #000;
+    }
+
+    .game-card.featured .card-title {
+      color: var(--accent-pink);
+    }
+
+    .game-card.featured .card-desc {
+      color: #cbd5e1;
+    }
+
+    /* Taustavärit korteille ilman kuvia */
+    .bg-1 { background: linear-gradient(135deg, #1e1b18, #3a2618); }
+    .bg-2 { background: linear-gradient(135deg, #1d4ed8, #007A78); }
+    .bg-3 { background: linear-gradient(135deg, #7f1d1d, #1e293b); }
+    .bg-4 { background: linear-gradient(135deg, #064e3b, #0f172a); }
+    .bg-5 { background: linear-gradient(135deg, #991b1b, #312e81); }
+    .bg-6 { background: linear-gradient(135deg, #111827, #C88A39); }
+    .bg-7 { background: linear-gradient(135deg, #1e3a8a, #3b82f6); }
+    .bg-8 { background: linear-gradient(135deg, #0f172a, #007A78); }
+    .bg-9 { background: linear-gradient(135deg, #be123c, #4c0519); }
+    .bg-10 { background: linear-gradient(135deg, #881337, #1e1b4b); }
+    .bg-11 { background: linear-gradient(135deg, #1e293b, #64748b); }
+    .bg-12 { background: linear-gradient(135deg, #065f46, #047857); }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-bar">
+      <h1>Suurempi vai pienempi – Pelikategoriat</h1>
+      <a href="index.html" class="back-btn">← Takaisin etusivulle</a>
+    </div>
+
+    <div class="games-grid">
+      
+      <!-- Kortti 1 (Erikoisteema) -->
+      <a href="#" class="game-card featured" onclick="startGame('Elokuvien lipputulot')">
+        <div class="card-banner bg-1">
+          <span class="badge">SUOSITTU</span>
+          <span>🎬</span>
+        </div>
+        <div class="card-content">
+          <div class="card-title">ELOKUVIEN LIPPUTULOT</div>
+          <div class="card-desc">Arvaa kumpi elokuva tuotti enemmän lipputuloja maailmanlaajuisesti.</div>
+        </div>
+      </a>
+
+      <!-- Kortti 2 -->
+      <a href="#" class="game-card" onclick="startGame('Valtioiden pinta-ala')">
+        <div class="card-banner bg-2">
+          <span class="badge">TRENDING</span>
+          <span>🌍</span>
+        </div>
+        <div class="card-content">
+          <div class="card-title">VALTIOIDEN PINTA-ALA</div>
+          <div class="card-desc">Arvaa kumpi valtio on pinta-alaltaan suurempi.</div>
+        </div>
+      </a>
+
+      <!-- Kortti 3 -->
+      <a href="#" class="game-card" onclick="startGame('Väkiluku maittain')">
+        <div class="card-banner bg-3">
+          <span class="badge">TRENDING</span>
+          <span>👥</span>
+        </div>
+        <div class="card-content">
+          <div class="card-title">VÄKILUKU MAITTAIN</div>
+          <div class="card-desc">Kummassa maassa asuu enemmän ihmisiä? Testaa tietosi tilastoista.</div>
+        </div>
+      </a>
+
+      <!-- Kortti 4 -->
+      <a href="#" class="game-card" onclick="startGame('Spotify-kuuntelijat')">
+        <div class="card-banner bg-4">
+          <span class="badge">TRENDING</span>
+          <span>🎧</span>
+        </div>
+        <div class="card-content">
+          <div class="card-title">SPOTIFY-KUUNTELIJAT</div>
+          <div class="card-desc">Arvaa tunnetuimpien artistien kuukausittaiset kuuntelijamäärät.</div>
+        </div>
+      </a>
+
+      <!-- Kortti 5 -->
+      <a href="#" class="game-card" onclick="startGame('Tubettajat')">
+        <div class="card-banner bg-5">
+          <span class="badge">TRENDING</span>
+          <span>▶️</span>
+        </div>
+        <div class="card-content">
+          <div class="card-title">TUBETTAJAT</div>
+          <div class="card-desc">Kummalla YouTube-kanavalla on enemmän tilaajia?</div>
+        </div>
+      </a>
+
+      <!-- Kortti 6 -->
+      <a href="#" class="game-card" onclick="startGame('IMDb-arvosanat')">
+        <div class="card-banner bg-6">
+          <span class="badge">TRENDING</span>
+          <span>⭐</span>
+        </div>
+        <div class="card-content">
+          <div class="card-title">IMDB-ARVOSANAT</div>
+          <div class="card-desc">Arvaa kummalla klassikkoelokuvalla on parempi IMDb-arvosana.</div>
+        </div>
+      </a>
+
+      <!-- Kortti 7 -->
+      <a href="#" class="game-card" onclick="startGame('Nettovarallisuus')">
+        <div class="card-banner bg-7">
+          <span class="badge">TRENDING</span>
+          <span>💰</span>
+        </div>
+        <div class="card-content">
+          <div class="card-title">NETTOVARALLISUUS</div>
+          <div class="card-desc">Kuka on rikkain? Vertaile tunnettujen henkilöiden omaisuuksia.</div>
+        </div>
+      </a>
+
+      <!-- Kortti 8 -->
+      <a href="#" class="game-card" onclick="startGame('Painavampi vai kevyempi')">
+        <div class="card-banner bg-8">
+          <span>⚖️</span>
+        </div>
+        <div class="card-content">
+          <div class="card-title">PAINAVAMPI VAI KEVYEMPI</div>
+          <div class="card-desc">Kumpi esine tai asia painaa enemmän? Arvaa oikea paino.</div>
+        </div>
+      </a>
+
+      <!-- Kortti 9 -->
+      <a href="#" class="game-card" onclick="startGame('Suosituimmat verkkosivut')">
+        <div class="card-banner bg-9">
+          <span>🌐</span>
+        </div>
+        <div class="card-content">
+          <div class="card-title">SUOSITUIMMAT SIVUSTOT</div>
+          <div class="card-desc">Arvaa millä verkkosivustolla on enemmän kuukausittaisia kävijöitä.</div>
+        </div>
+      </a>
+
+      <!-- Kortti 10 -->
+      <a href="#" class="game-card" onclick="startGame('Jalkapalloilijoiden arvo')">
+        <div class="card-banner bg-10">
+          <span class="badge new">PÄIVITETTY</span>
+          <span>⚽</span>
+        </div>
+        <div class="card-content">
+          <div class="card-title">JALKAPALLOILIJOIDEN ARVO</div>
+          <div class="card-desc">Vertaile huippupelaajien markkina-arvoja keskenään.</div>
+        </div>
+      </a>
+
+      <!-- Kortti 11 -->
+      <a href="#" class="game-card" onclick="startGame('Google-haut')">
+        <div class="card-banner bg-11">
+          <span>🔍</span>
+        </div>
+        <div class="card-content">
+          <div class="card-title">GOOGLE-HAUT</div>
+          <div class="card-desc">Kumpaa hakusanaa haetaan Googlessa enemmän kuukaudessa?</div>
+        </div>
+      </a>
+
+      <!-- Kortti 12 -->
+      <a href="#" class="game-card" onclick="startGame('MM-kisojen maalit')">
+        <div class="card-banner bg-12">
+          <span>🏆</span>
+        </div>
+        <div class="card-content">
+          <div class="card-title">MM-KISOJEN MAALIT</div>
+          <div class="card-desc">Arvaa kumpi maa on tehnyt enemmän maaleja jalkapallon MM-historiassa.</div>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <script>
+    function startGame(category) {
+      alert('Valitsit kategorian: ' + category + '\n(Tähän voit yhdistää varsinaisen pelilogiikan!)');
+    }
+  </script>
+
+</body>
+</html>
