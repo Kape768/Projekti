@@ -6,18 +6,20 @@
   <title>Suurempi vai pienempi - Pelivalikko</title>
   <style>
     :root {
-      --bg-dark: #070e1a;
-      --card-bg: #ffffff;
-      --text-dark: #1e293b;
-      --text-muted: #475569;
-      --accent-teal: #007A78;
-      --accent-pink: #FFA4BC;
-      --accent-bronze: #C88A39;
-      --badge-red: #dc2626;
+      --sky-top: #0a5261;
+      --sky-bottom: #247f8c;
+      --cloud-light: #f69cb0;
+      --cloud-mid: #d97792;
+      --cloud-shadow: #b55d78;
       
-      /* Tilojen säätö: Reunoille jää täsmälleen 2x laatikoiden välinen tila */
+      --card-bg: #fff6f8;
+      --text-title: #9e2a4b;
+      --text-muted: #523a44;
+      --btn-bg: #d9708c;
+      --btn-hover: #c25975;
+      
       --gap: 22px;
-      --side-margin: calc(var(--gap) * 2); /* 44px */
+      --side-margin: calc(var(--gap) * 2);
     }
 
     * {
@@ -26,13 +28,14 @@
       padding: 0;
     }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg-dark);
-      color: #ffffff;
-      padding: 40px var(--side-margin);
-      min-height: 100vh;
-    }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: linear-gradient(180deg, #0a5261 0%, #247f8c 55%, #8e6242 100%);
+  background-attachment: fixed;
+  color: #ffffff;
+  padding: 40px var(--side-margin);
+  min-height: 100vh;
+}
 
     .container {
       width: 100%;
@@ -51,144 +54,135 @@
       font-size: 28px;
       font-weight: 700;
       letter-spacing: -0.3px;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
     }
 
     .back-btn {
-      background-color: var(--accent-teal);
+      background-color: var(--btn-bg);
       color: #fff;
       text-decoration: none;
       padding: 12px 20px;
       border-radius: 6px;
       font-size: 15px;
       font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       transition: background-color 0.2s ease, transform 0.15s ease;
     }
 
     .back-btn:hover {
-      background-color: #005f5d;
+      background-color: var(--btn-hover);
       transform: translateY(-1px);
     }
 
-    /* Korttiruudukko: Asetettu tarkasti 6 korttia per rivi */
     .games-grid {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: var(--gap);
     }
 
-    /* Responsiivisuus pienemmille näytöille */
-    @media (max-width: 1400px) {
-      .games-grid {
-        grid-template-columns: repeat(4, 1fr);
-      }
-    }
-    @media (max-width: 1000px) {
+    @media (max-width: 1150px) {
       .games-grid {
         grid-template-columns: repeat(3, 1fr);
       }
     }
-    @media (max-width: 700px) {
+    @media (max-width: 850px) {
       .games-grid {
         grid-template-columns: repeat(2, 1fr);
       }
     }
-    @media (max-width: 450px) {
+    @media (max-width: 500px) {
       .games-grid {
         grid-template-columns: 1fr;
       }
     }
 
-    .game-card {
-      background-color: var(--card-bg);
-      border-radius: 10px;
-      overflow: hidden;
+    .cloud-wrapper {
+      display: block;
       text-decoration: none;
-      display: flex;
-      flex-direction: column;
-      border-bottom: 5px solid var(--badge-red);
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      aspect-ratio: 1 / 1;
+      filter: drop-shadow(0 8px 18px rgba(7, 38, 46, 0.45));
+      transition: transform 0.2s ease, filter 0.2s ease;
     }
 
-    .game-card:hover {
+    .cloud-wrapper:hover {
       transform: translateY(-6px);
-      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.65);
+      filter: drop-shadow(0 16px 28px rgba(7, 38, 46, 0.65));
     }
 
-    /* Kortin yläosa */
-    .card-banner {
-      height: 210px;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 68px;
-      user-select: none;
-    }
-
-    .badge {
-      position: absolute;
-      top: 14px;
-      left: 0;
-      background-color: var(--badge-red);
-      color: #ffffff;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 0.6px;
-      padding: 5px 10px;
-      text-transform: uppercase;
-      border-top-right-radius: 4px;
-      border-bottom-right-radius: 4px;
-      box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
-    }
-
-    .badge.updated {
-      background-color: var(--accent-teal);
-    }
-
-    /* Kortin alaosa (teksti) */
-    .card-content {
-      padding: 18px 16px 20px;
-      flex-grow: 1;
+    .game-card {
+      width: 100%;
+      height: 100%;
+      background-color: var(--card-bg);
       display: flex;
       flex-direction: column;
+      
+      -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M 24 92 C 8 92 2 80 2 68 C 2 57 9 49 18 47 C 16 32 28 20 43 22 C 50 8 72 8 79 23 C 92 24 98 35 96 47 C 100 54 100 68 96 76 C 92 87 83 92 72 92 Z' fill='black'/%3E%3C/svg%3E");
+      mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M 24 92 C 8 92 2 80 2 68 C 2 57 9 49 18 47 C 16 32 28 20 43 22 C 50 8 72 8 79 23 C 92 24 98 35 96 47 C 100 54 100 68 96 76 C 92 87 83 92 72 92 Z' fill='black'/%3E%3C/svg%3E");
+      -webkit-mask-size: 100% 100%;
+      mask-size: 100% 100%;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+    }
+
+    .card-banner {
+      height: 73%;
+      position: relative;
+      user-select: none;
+      background: linear-gradient(145deg, var(--cloud-light) 15%, var(--cloud-mid) 60%, var(--cloud-shadow) 100%);
+      animation: cloudHueShift 16s ease-in-out infinite alternate;
+    }
+
+    @keyframes cloudHueShift {
+      0% {
+        background: linear-gradient(145deg, #f69cb0 15%, #d97792 60%, #b55d78 100%);
+      }
+      50% {
+        background: linear-gradient(145deg, #f89fb3 15%, #d67490 60%, #b35a76 100%);
+      }
+      100% {
+        background: linear-gradient(145deg, #f499ad 15%, #db7a94 60%, #b7607a 100%);
+      }
+    }
+
+    .card-banner span {
+      position: absolute;
+      top: 56%;
+      left: 55%;
+      transform: translate(-50%, -50%);
+      font-size: clamp(46px, 4.6vw, 68px);
+      line-height: 1;
+      filter: drop-shadow(0 3px 6px rgba(130, 48, 72, 0.25));
+    }
+
+    .card-content {
+      height: 27%;
+      padding: 0 28px 8% 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      justify-content: center;
     }
 
     .card-title {
-      color: var(--badge-red);
-      font-size: 15px;
+      color: var(--text-title);
+      font-size: clamp(11px, 1vw, 13.5px);
       font-weight: 800;
       font-style: italic;
       text-transform: uppercase;
-      margin-bottom: 8px;
-      line-height: 1.25;
+      margin-bottom: 2px;
+      line-height: 1.15;
     }
 
     .card-desc {
       color: var(--text-muted);
-      font-size: 13px;
-      line-height: 1.45;
+      font-size: clamp(10px, 0.85vw, 11.5px);
+      line-height: 1.25;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
-
-    /* Taustavärit korteille */
-    .bg-1 { background: linear-gradient(135deg, #1d4ed8, #007A78); }
-    .bg-2 { background: linear-gradient(135deg, #7f1d1d, #1e293b); }
-    .bg-3 { background: linear-gradient(135deg, #064e3b, #0f172a); }
-    .bg-4 { background: linear-gradient(135deg, #991b1b, #312e81); }
-    .bg-5 { background: linear-gradient(135deg, #1e3a8a, #3b82f6); }
-    .bg-6 { background: linear-gradient(135deg, #0f172a, #007A78); }
-    .bg-7 { background: linear-gradient(135deg, #be123c, #4c0519); }
-    .bg-8 { background: linear-gradient(135deg, #881337, #1e1b4b); }
-    .bg-9 { background: linear-gradient(135deg, #1e293b, #64748b); }
-    .bg-10 { background: linear-gradient(135deg, #065f46, #047857); }
-    .bg-11 { background: linear-gradient(135deg, #2e1065, #7c2d12); }
-    .bg-12 { background: linear-gradient(135deg, #1e3a8a, #0f172a); }
-    .bg-13 { background: linear-gradient(135deg, #047857, #065f46); }
-    .bg-14 { background: linear-gradient(135deg, #374151, #111827); }
-    .bg-15 { background: linear-gradient(135deg, #b45309, #78350f); }
-    .bg-16 { background: linear-gradient(135deg, #4338ca, #312e81); }
-    .bg-17 { background: linear-gradient(135deg, #831843, #500724); }
-    .bg-18 { background: linear-gradient(135deg, #1e1b4b, #0284c7); }
   </style>
 </head>
 <body>
@@ -201,192 +195,99 @@
 
     <div class="games-grid">
       
-      <!-- Rivi 1 -->
-      <a href="#" class="game-card" onclick="startGame('Valtioiden pinta-ala')">
-        <div class="card-banner bg-1">
-          <span class="badge">TRENDING</span>
-          <span>🌍</span>
-        </div>
-        <div class="card-content">
-          <div class="card-title">VALTIOIDEN PINTA-ALA</div>
-          <div class="card-desc">Arvaa kumpi valtio on pinta-alaltaan suurempi.</div>
-        </div>
-      </a>
-
-      <a href="#" class="game-card" onclick="startGame('Väkiluku maittain')">
-        <div class="card-banner bg-2">
-          <span class="badge">TRENDING</span>
-          <span>👥</span>
-        </div>
-        <div class="card-content">
-          <div class="card-title">VÄKILUKU MAITTAIN</div>
-          <div class="card-desc">Kummassa maassa asuu enemmän ihmisiä? Testaa tietosi tilastoista.</div>
+      <a href="pinta-ala.html" class="cloud-wrapper">
+        <div class="game-card">
+          <div class="card-banner">
+            <span>🌍</span>
+          </div>
+          <div class="card-content">
+            <div class="card-title">VALTIOIDEN PINTA-ALA</div>
+            <div class="card-desc">Arvaa kumpi valtio on pinta-alaltaan suurempi.</div>
+          </div>
         </div>
       </a>
 
-      <a href="#" class="game-card" onclick="startGame('Spotify-kuuntelijat')">
-        <div class="card-banner bg-3">
-          <span class="badge">TRENDING</span>
-          <span>🎧</span>
-        </div>
-        <div class="card-content">
-          <div class="card-title">SPOTIFY-KUUNTELIJAT</div>
-          <div class="card-desc">Arvaa tunnetuimpien artistien kuukausittaiset kuuntelijamäärät.</div>
-        </div>
-      </a>
-
-      <a href="#" class="game-card" onclick="startGame('Tubettajat')">
-        <div class="card-banner bg-4">
-          <span class="badge">TRENDING</span>
-          <span>▶️</span>
-        </div>
-        <div class="card-content">
-          <div class="card-title">TUBETTAJAT</div>
-          <div class="card-desc">Kummalla YouTube-kanavalla on enemmän tilaajia?</div>
+      <a href="vakiluku.html" class="cloud-wrapper">
+        <div class="game-card">
+          <div class="card-banner">
+            <span>👥</span>
+          </div>
+          <div class="card-content">
+            <div class="card-title">VÄKILUKU MAITTAIN</div>
+            <div class="card-desc">Kummassa maassa asuu enemmän ihmisiä? Testaa tietosi tilastoista.</div>
+          </div>
         </div>
       </a>
 
-      <a href="#" class="game-card" onclick="startGame('Nettovarallisuus')">
-        <div class="card-banner bg-5">
-          <span class="badge">TRENDING</span>
-          <span>💰</span>
-        </div>
-        <div class="card-content">
-          <div class="card-title">NETTOVARALLISUUS</div>
-          <div class="card-desc">Kuka on rikkain? Vertaile tunnettujen henkilöiden omaisuuksia.</div>
-        </div>
-      </a>
-
-      <a href="#" class="game-card" onclick="startGame('Painavampi vai kevyempi')">
-        <div class="card-banner bg-6">
-          <span>⚖️</span>
-        </div>
-        <div class="card-content">
-          <div class="card-title">PAINAVAMPI VAI KEVYEMPI</div>
-          <div class="card-desc">Kumpi esine tai asia painaa enemmän? Arvaa oikea paino.</div>
+      <a href="maalit.html" class="cloud-wrapper">
+        <div class="game-card">
+          <div class="card-banner">
+            <span>⚽🥅</span>
+          </div>
+          <div class="card-content">
+            <div class="card-title">JALKAPALLOILIJOIDEN MAALIT</div>
+            <div class="card-desc">Kumpi pelaaja on tehnyt urallaan enemmän virallisia maaleja?</div>
+          </div>
         </div>
       </a>
 
-      <!-- Rivi 2 -->
-      <a href="#" class="game-card" onclick="startGame('Suosituimmat verkkosivut')">
-        <div class="card-banner bg-7">
-          <span>🌐</span>
-        </div>
-        <div class="card-content">
-          <div class="card-title">SUOSITUIMMAT SIVUSTOT</div>
-          <div class="card-desc">Arvaa millä verkkosivustolla on enemmän kuukausittaisia kävijöitä.</div>
-        </div>
-      </a>
-
-      <a href="#" class="game-card" onclick="startGame('Jalkapalloilijoiden arvo')">
-        <div class="card-banner bg-8">
-          <span class="badge updated">PÄIVITETTY</span>
-          <span>⚽</span>
-        </div>
-        <div class="card-content">
-          <div class="card-title">JALKAPALLOILIJOIDEN ARVO</div>
-          <div class="card-desc">Vertaile huippupelaajien markkina-arvoja keskenään.</div>
+      <a href="nhl.html" class="cloud-wrapper">
+        <div class="game-card">
+          <div class="card-banner">
+            <span>🏒</span>
+          </div>
+          <div class="card-content">
+            <div class="card-title">NHL-PISTEET PER KAUSI</div>
+            <div class="card-desc">Vertaile lätkälegendojen parhaita yhden kauden pistelukemia.</div>
+          </div>
         </div>
       </a>
 
-      <a href="#" class="game-card" onclick="startGame('Google-haut')">
-        <div class="card-banner bg-9">
-          <span>🔍</span>
-        </div>
-        <div class="card-content">
-          <div class="card-title">GOOGLE-HAUT</div>
-          <div class="card-desc">Kumpaa hakusanaa haetaan Googlessa enemmän kuukaudessa?</div>
-        </div>
-      </a>
-
-      <a href="#" class="game-card" onclick="startGame('MM-kisojen maalit')">
-        <div class="card-banner bg-10">
-          <span>🏆</span>
-        </div>
-        <div class="card-content">
-          <div class="card-title">MM-KISOJEN MAALIT</div>
-          <div class="card-desc">Arvaa kumpi maa on tehnyt enemmän maaleja jalkapallon MM-historiassa.</div>
+      <a href="ucl.html" class="cloud-wrapper">
+        <div class="game-card">
+          <div class="card-banner">
+            <span>⭐⚽</span>
+          </div>
+          <div class="card-content">
+            <div class="card-title">MESTARIEN LIIGA SEURAT</div>
+            <div class="card-desc">Kummalla jalkapalloseuralla on enemmän otteluita Mestarien liigassa?</div>
+          </div>
         </div>
       </a>
 
-      <a href="#" class="game-card" onclick="startGame('Jalkapalloilijoiden maalit urallaan')">
-        <div class="card-banner bg-11">
-          <span>⚽🥅</span>
-        </div>
-        <div class="card-content">
-          <div class="card-title">JALKAPALLOILIJOIDEN MAALIT</div>
-          <div class="card-desc">Kumpi pelaaja on tehnyt urallaan enemmän virallisia maaleja?</div>
-        </div>
-      </a>
-
-      <a href="#" class="game-card" onclick="startGame('NHL-pelaajien parhaat pisteet per kausi')">
-        <div class="card-banner bg-12">
-          <span>🏒</span>
-        </div>
-        <div class="card-content">
-          <div class="card-title">NHL-PISTEET PER KAUSI</div>
-          <div class="card-desc">Vertaile lätkälegendojen parhaita yhden kauden pistelukemia.</div>
+      <a href="nba.html" class="cloud-wrapper">
+        <div class="game-card">
+          <div class="card-banner">
+            <span>🏀</span>
+          </div>
+          <div class="card-content">
+            <div class="card-title">NBA-URAN PISTEET</div>
+            <div class="card-desc">Kumpi koripallolegenda teki enemmän pisteitä NBA-uransa aikana?</div>
+          </div>
         </div>
       </a>
 
-      <!-- Rivi 3 -->
-      <a href="#" class="game-card" onclick="startGame('Mestarien liigan ottelut seuralla')">
-        <div class="card-banner bg-13">
-          <span>⭐⚽</span>
-        </div>
-        <div class="card-content">
-          <div class="card-title">MESTARIEN LIIGA SEURAT</div>
-          <div class="card-desc">Kummalla jalkapalloseuralla on enemmän otteluita Mestarien liigassa?</div>
-        </div>
-      </a>
-
-      <a href="#" class="game-card" onclick="startGame('NHL-ottelut pelaajalla')">
-        <div class="card-banner bg-14">
-          <span>🏒🥅</span>
-        </div>
-        <div class="card-content">
-          <div class="card-title">NHL-URAN PELIT</div>
-          <div class="card-desc">Kumpi jääkiekkoilija pelasi urallaan enemmän runkosarjaotteluita NHL:ssä?</div>
+      <a href="etaisyys.html" class="cloud-wrapper">
+        <div class="game-card">
+          <div class="card-banner">
+            <span>🗺️✈️</span>
+          </div>
+          <div class="card-content">
+            <div class="card-title">MAIDEN ETÄISYYS</div>
+            <div class="card-desc">Kumpi maapari on maantieteellisesti kauempana toisistaan linnuntietä?</div>
+          </div>
         </div>
       </a>
 
-      <a href="#" class="game-card" onclick="startGame('NBA-pelaajien pisteet')">
-        <div class="card-banner bg-15">
-          <span>🏀</span>
-        </div>
-        <div class="card-content">
-          <div class="card-title">NBA-URAN PISTEET</div>
-          <div class="card-desc">Kumpi koripallolegenda teki enemmän pisteitä NBA-uransa aikana?</div>
-        </div>
-      </a>
-
-      <a href="#" class="game-card" onclick="startGame('Maiden välinen etäisyys')">
-        <div class="card-banner bg-16">
-          <span>🗺️✈️</span>
-        </div>
-        <div class="card-content">
-          <div class="card-title">MAIDEN ETÄISYYS</div>
-          <div class="card-desc">Kumpi maapari on maantieteellisesti kauempana toisistaan linnuntietä?</div>
-        </div>
-      </a>
-
-      <a href="#" class="game-card" onclick="startGame('Kaupunkien asukasluku')">
-        <div class="card-banner bg-17">
-          <span>🏙️</span>
-        </div>
-        <div class="card-content">
-          <div class="card-title">KAUPUNKIEN ASUKASLUKU</div>
-          <div class="card-desc">Kummassa maailman metropolissa on enemmän asukkaita?</div>
-        </div>
-      </a>
-
-      <a href="#" class="game-card" onclick="startGame('Mestarien liigan ottelut pelaajalla')">
-        <div class="card-banner bg-18">
-          <span>🏆⚽</span>
-        </div>
-        <div class="card-content">
-          <div class="card-title">MESTARIEN LIIGA PELAAJAT</div>
-          <div class="card-desc">Kummalla jalkapalloilijalla on enemmän Mestarien liiga -otteluita?</div>
+      <a href="asukasluku.html" class="cloud-wrapper">
+        <div class="game-card">
+          <div class="card-banner">
+            <span>🏙️</span>
+          </div>
+          <div class="card-content">
+            <div class="card-title">KAUPUNKIEN ASUKASLUKU</div>
+            <div class="card-desc">Kummassa maailman metropolissa on enemmän asukkaita?</div>
+          </div>
         </div>
       </a>
 
@@ -394,9 +295,26 @@
   </div>
 
   <script>
-    function startGame(category) {
-      alert('Valitsit kategorian: ' + category);
-    }
+    (function () {
+      // Alkuvärit (sinivihreä) -> loppuvärit (ruskehtava)
+      const topFrom = [10, 82, 97],   topTo = [92, 58, 38];
+      const botFrom = [36, 127, 140], botTo = [142, 98, 66];
+
+      const mix = (a, b, t) =>
+        a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(',');
+
+      function update() {
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        const t = max > 0 ? Math.min(Math.max(window.scrollY / max, 0), 1) : 0;
+        const root = document.documentElement.style;
+        root.setProperty('--sky-top', 'rgb(' + mix(topFrom, topTo, t) + ')');
+        root.setProperty('--sky-bottom', 'rgb(' + mix(botFrom, botTo, t) + ')');
+      }
+
+      window.addEventListener('scroll', update, { passive: true });
+      window.addEventListener('resize', update);
+      update();
+    })();
   </script>
 
 </body>
