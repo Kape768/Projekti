@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaupunkien asukasluku – Suurempi vai pienempi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(180deg, #0b4858 0%, #165e6c 55%, #376661 85%, #625d49 100%);
+            color: #ffffff;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Yläpalkki kuten kategoriavalikossa */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 18px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 30;
+            pointer-events: none;
+        }
+
+        .game-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            pointer-events: auto;
+        }
+
+        /* Pinkki painike kategoriavalikon tyylillä (#d66885) */
+        .back-btn {
+            background-color: #d66885;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 10px 18px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+            transition: transform 0.15s ease, background-color 0.2s ease;
+            pointer-events: auto;
+        }
+
+        .back-btn:hover {
+            background-color: #e37995;
+            transform: translateY(-1px);
+        }
+
+        .back-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Jaettu pelinäkymä */
+        .game-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .panel {
+            flex: 1;
+            height: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px 30px;
+            overflow: hidden;
+        }
+
+        /* Taustalla himmennetty valtion lippu + teeman mukainen liukuväri */
+        .panel-bg-flag {
+            position: absolute;
+            inset: -15%;
+            width: 130%;
+            height: 130%;
+            object-fit: cover;
+            filter: blur(0px) brightness(0.45) saturate(1.15);
+            opacity: 0.45;
+            z-index: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                180deg,
+                rgba(11, 72, 88, 0.72) 0%,
+                rgba(22, 94, 108, 0.65) 55%,
+                rgba(55, 102, 97, 0.78) 85%,
+                rgba(98, 93, 73, 0.88) 100%
+            );
+            z-index: 1;
+        }
+
+        .panel-left {
+            border-right: 1px solid rgba(255, 255, 255, 0.16);
+        }
+
+        .panel-content {
+            position: relative;
+            z-index: 2;
+            max-width: 500px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .flag-badge {
+            width: 84px;
+            height: 56px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-bottom: 14px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .country-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: rgba(255, 255, 255, 0.78);
+            margin-bottom: 6px;
+        }
+
+        .country-name {
+            font-size: clamp(1.85rem, 3.3vw, 3.1rem);
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+        }
+
+        .subtitle-text {
+            font-size: 1rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.92);
+            margin-bottom: 10px;
+        }
+
+        .area-value {
+            font-size: clamp(2.3rem, 4vw, 3.6rem);
+            font-weight: 800;
+            color: #f7e06d;
+            text-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+            margin: 6px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .unit-text {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.88);
+        }
+
+        /* Suurempi / Pienempi -painikkeet kategoriavalikon pinkillä värillä (#d66885) */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 12px 0 16px;
+            width: 220px;
+        }
+
+        .guess-btn {
+            background-color: #d66885;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 13px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.32);
+            transition: all 0.18s ease;
+        }
+
+        .guess-btn:hover:not(:disabled) {
+            background-color: #e37995;
+            border-color: #ffffff;
+            transform: scale(1.04);
+            box-shadow: 0 8px 22px rgba(214, 104, 133, 0.45);
+        }
+
+        .guess-btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .guess-btn:disabled {
+            opacity: 0.65;
+            cursor: default;
+        }
+
+        .arrow-icon {
+            font-size: 0.8rem;
+        }
+
+        .comparison-caption {
+            font-size: 0.92rem;
+            color: rgba(255, 255, 255, 0.92);
+            max-width: 360px;
+            line-height: 1.4;
+        }
+
+        /* Keskellä oleva VS-ympyrä */
+        .vs-badge {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background-color: #d66885;
+            color: #161616;
+            font-size: 1.35rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+        }
+
+        .vs-badge.correct {
+            background-color: #2ecc71;
+            color: #ffffff;
+            transform: translate(-50%, -50%) scale(1.15);
+        }
+
+        .vs-badge.wrong {
+            background-color: #e74c3c;
+            color: #ffffff;
+            transform: translate(-50%, -50%) scale(1.15);
+        }
+
+        /* Alareunan pistelaskurit */
+        .bottom-hud {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 18px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 25;
+            pointer-events: none;
+            font-size: 1.05rem;
+            font-weight: 700;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.75);
+        }
+
+        .revealed-box {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin: 6px 0;
+        }
+
+        .revealed-box.visible {
+            display: flex;
+        }
+
+        /* Game Over -näkymä */
+        .gameover-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(11, 52, 64, 0.9);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 24px;
+            animation: fadeIn 0.35s ease forwards;
+        }
+
+        .gameover-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .gameover-card {
+            background: linear-gradient(160deg, #135363 0%, #0d3a46 100%);
+            border: 2px solid rgba(255, 255, 255, 0.18);
+            border-radius: 20px;
+            padding: 40px 36px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+        }
+
+        .gameover-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #d66885;
+            margin-bottom: 10px;
+        }
+
+        .gameover-fact {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .score-summary {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 28px;
+        }
+
+        .score-stat span {
+            display: block;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.75);
+            margin-bottom: 4px;
+        }
+
+        .score-stat strong {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #f7e06d;
+        }
+
+        .gameover-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .play-again-btn {
+            background-color: #d66885;
+            color: #ffffff;
+            border: none;
+            border-radius: 50px;
+            padding: 14px 28px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+            transition: transform 0.15s ease, background-color 0.2s ease;
+        }
+
+        .play-again-btn:hover {
+            background-color: #e37995;
+            transform: scale(1.03);
+        }
+
+        .menu-link-btn {
+            background: transparent;
+            color: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 50px;
+            padding: 12px 24px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .menu-link-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+        }
+
+        /* Responsiivisuus mobiililaitteille */
+        @media (max-width: 768px) {
+            .game-container {
+                flex-direction: column;
+            }
+            .panel-left {
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+            }
+            .panel {
+                padding: 20px 16px;
+            }
+            .flag-badge {
+                width: 56px;
+                height: 38px;
+                margin-bottom: 6px;
+            }
+            .country-name {
+                font-size: 1.55rem;
+                margin-bottom: 4px;
+            }
+            .area-value {
+                font-size: 1.85rem;
+            }
+            .controls {
+                flex-direction: row;
+                width: auto;
+                gap: 10px;
+            }
+            .guess-btn {
+                padding: 10px 18px;
+                font-size: 0.9rem;
+            }
+            .vs-badge {
+                width: 52px;
+                height: 52px;
+                font-size: 1.05rem;
+            }
+            .top-bar {
+                padding: 12px 16px;
+            }
+            .game-title {
+                font-size: 0.95rem;
+            }
+            .back-btn {
+                padding: 7px 12px;
+                font-size: 0.78rem;
+            }
+            .bottom-hud {
+                padding: 10px 16px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Yläpalkki -->
+    <header class="top-bar">
+        <div class="game-title">Suurempi vai pienempi – Kaupunkien asukasluku</div>
+        <a href="lower-higher.html" class="back-btn">← Takaisin etusivulle</a>
+    </header>
+
+    <!-- Pelialue -->
+    <main class="game-container">
+        <!-- Vasen metropoli -->
+        <section class="panel panel-left" id="left-panel">
+            <img id="left-bg-flag" class="panel-bg-flag" src="" alt="">
+            <div class="panel-content">
+                <img id="left-flag" class="flag-badge" src="" alt="Lippu">
+                <div class="country-label" id="left-country">Japani</div>
+                <h1 class="country-name" id="left-name">Tokio</h1>
+                <p class="subtitle-text">metropolin asukasluku on</p>
+                <div class="area-value" id="left-area">37 115 000</div>
+                <p class="unit-text">asukasta</p>
+            </div>
+        </section>
+
+        <!-- Keskellä VS-ympyrä -->
+        <div class="vs-badge" id="vs-badge">VS</div>
+
+        <!-- Oikea metropoli -->
+        <section class="panel panel-right" id="right-panel">
+            <img id="right-bg-flag" class="panel-bg-flag" src="" alt="">
+            <div class="panel-content">
+                <img id="right-flag" class="flag-badge" src="" alt="Lippu">
+                <div class="country-label" id="right-country">Intia</div>
+                <h2 class="country-name" id="right-name">Delhi</h2>
+                <p class="subtitle-text">metropolin asukasluku on</p>
+
+                <!-- Arvauspainikkeet -->
+                <div class="controls" id="controls-box">
+                    <button class="guess-btn" id="btn-higher" onclick="makeGuess('higher')">
+                        Suurempi <span class="arrow-icon">▲</span>
+                    </button>
+                    <button class="guess-btn" id="btn-lower" onclick="makeGuess('lower')">
+                        Pienempi <span class="arrow-icon">▼</span>
+                    </button>
+                </div>
+
+                <!-- Paljastettu asukasluku -->
+                <div class="revealed-box" id="revealed-box">
+                    <div class="area-value" id="right-area">0</div>
+                    <p class="unit-text">asukasta</p>
+                </div>
+
+                <p class="comparison-caption" id="comparison-caption">
+                    kuin metropolissa Tokio
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Alareunan pistenäyttö -->
+    <footer class="bottom-hud">
+        <div id="high-score-display">Ennätys: 0</div>
+        <div id="score-display">Pisteet: 0</div>
+    </footer>
+
+    <!-- Game Over -ikkuna -->
+    <div class="gameover-overlay" id="gameover-overlay">
+        <div class="gameover-card">
+            <h2 class="gameover-title">Väärä arvaus!</h2>
+            <p class="gameover-fact" id="gameover-fact"></p>
+            <div class="score-summary">
+                <div class="score-stat">
+                    <span>Pisteet</span>
+                    <strong id="final-score">0</strong>
+                </div>
+                <div class="score-stat">
+                    <span>Ennätys</span>
+                    <strong id="final-highscore">0</strong>
+                </div>
+            </div>
+            <div class="gameover-actions">
+                <button class="play-again-btn" onclick="startNewGame()">Pelaa uudelleen</button>
+                <a href="lower-higher.html" class="menu-link-btn">← Takaisin pelikategorioihin</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 100 maailman tunnetuinta metropolialuetta ja niiden asukasluvut
+        const cities = [
+            { name: "Tokio", country: "Japani", code: "jp", pop: 37115000 , img: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Delhi", country: "Intia", code: "in", pop: 33807000 , img: "https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Shanghai", country: "Kiina", code: "cn", pop: 29868000 , img: "https://images.unsplash.com/photo-1474181487882-5abf3f0ba6c2?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Dhaka", country: "Bangladesh", code: "bd", pop: 23936000 , img: "https://images.unsplash.com/photo-1608481337062-4093bf3e4033?auto=format&fit=crop&w=1200&q=80" },
+            { name: "São Paulo", country: "Brasilia", code: "br", pop: 22807000 , img: "https://images.unsplash.com/photo-1543059080-f9b1272213d5?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Kairo", country: "Egypti", code: "eg", pop: 22624000 , img: "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?auto=format&fit=crop&w=1200&q=80" },
+            { name: "México", country: "Meksiko", code: "mx", pop: 22505000 , img: "https://images.unsplash.com/photo-1518659526054-190340b32735?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Peking", country: "Kiina", code: "cn", pop: 22189000 , img: "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Mumbai", country: "Intia", code: "in", pop: 21673000 , img: "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Osaka", country: "Japani", code: "jp", pop: 18967000 , img: "https://images.unsplash.com/photo-1590559899731-a382839e5549?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Chongqing", country: "Kiina", code: "cn", pop: 17774000 , img: "https://images.unsplash.com/photo-1563245372-f21724e38c6d?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Karachi", country: "Pakistan", code: "pk", pop: 17649000 , img: "https://images.unsplash.com/photo-1598977123118-4e30ba3c4f5b?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Kinshasa", country: "Kongon demokraattinen tasavalta", code: "cd", pop: 17032000 , img: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Lagos", country: "Nigeria", code: "ng", pop: 16536000 , img: "https://images.unsplash.com/photo-1618828665011-0bd9394300ed?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Istanbul", country: "Turkki", code: "tr", pop: 16047000 , img: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Buenos Aires", country: "Argentiina", code: "ar", pop: 15618000 , img: "https://images.unsplash.com/photo-1589909710782-ea084ad31c2c?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Kalkutta", country: "Intia", code: "in", pop: 15571000 , img: "https://images.unsplash.com/photo-1558431382-27e303142255?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Manila", country: "Filippiinit", code: "ph", pop: 14942000 , img: "https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Guangzhou", country: "Kiina", code: "cn", pop: 14590000 , img: "https://images.unsplash.com/photo-1536599018102-9f803c140fc1?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Tianjin", country: "Kiina", code: "cn", pop: 14471000 , img: "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Lahore", country: "Pakistan", code: "pk", pop: 14407000 , img: "https://images.unsplash.com/photo-1582653291997-079a1c04e5a1?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Rio de Janeiro", country: "Brasilia", code: "br", pop: 13824000 , img: "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Bangalore", country: "Intia", code: "in", pop: 14008000 , img: "https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Shenzhen", country: "Kiina", code: "cn", pop: 13312000 , img: "https://images.unsplash.com/photo-1525874684015-58379d421a52?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Moskova", country: "Venäjä", code: "ru", pop: 12712000 , img: "https://images.unsplash.com/photo-1513326738677-b964603b136d?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Chennai", country: "Intia", code: "in", pop: 12054000 , img: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Bogotá", country: "Kolumbia", code: "co", pop: 11658000 , img: "https://images.unsplash.com/photo-1568632234157-ce7aecd03d0d?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Jakarta", country: "Indonesia", code: "id", pop: 11436000 , img: "https://images.unsplash.com/photo-1555899434-94d1368aa7af?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Lima", country: "Peru", code: "pe", pop: 11362000 , img: "https://images.unsplash.com/photo-1531968455001-5c521276d5d5?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Pariisi", country: "Ranska", code: "fr", pop: 11277000 , img: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Bangkok", country: "Thaimaa", code: "th", pop: 11234000 , img: "https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Hyderabad", country: "Intia", code: "in", pop: 11069000 , img: "https://images.unsplash.com/photo-1572441713132-51c25e9a45df?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Soul", country: "Etelä-Korea", code: "kr", pop: 10005000 , img: "https://images.unsplash.com/photo-1538485399081-7191377e8241?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Nanjing", country: "Kiina", code: "cn", pop: 9940000 , img: "https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Chengdu", country: "Kiina", code: "cn", pop: 9837000 , img: "https://images.unsplash.com/photo-1591604466107-ec972577a824?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Lontoo", country: "Iso-Britannia", code: "gb", pop: 9748000 , img: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Luanda", country: "Angola", code: "ao", pop: 9651000 , img: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Teheran", country: "Iran", code: "ir", pop: 9616000 , img: "https://images.unsplash.com/photo-1565018054866-968e24ce218b?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Hồ Chí Minhin kaupunki", country: "Vietnam", code: "vn", pop: 9568000 , img: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Nagoya", country: "Japani", code: "jp", pop: 9552000 , img: "https://images.unsplash.com/photo-1624253321171-1be53e12f5f4?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Wuhan", country: "Kiina", code: "cn", pop: 8904000 , img: "https://images.unsplash.com/photo-1569949380643-6e746ecaa3bd?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Xi'an", country: "Kiina", code: "cn", pop: 8850000 , img: "https://images.unsplash.com/photo-1590144662036-33bf0ebd2c7f?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Ahmedabad", country: "Intia", code: "in", pop: 8854000 , img: "https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Kuala Lumpur", country: "Malesia", code: "my", pop: 8815000 , img: "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=1200&q=80" },
+            { name: "New York", country: "Yhdysvallat", code: "us", pop: 8804000 , img: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Hangzhou", country: "Kiina", code: "cn", pop: 8442000 , img: "https://images.unsplash.com/photo-1599571238293-98c1f80e6be9?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Surat", country: "Intia", code: "in", pop: 8331000 , img: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Suzhou", country: "Kiina", code: "cn", pop: 8293000 , img: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Dar es Salaam", country: "Tansania", code: "tz", pop: 8161000 , img: "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Riad", country: "Saudi-Arabia", code: "sa", pop: 7821000 , img: "https://images.unsplash.com/photo-1586724237569-f3d0c1dee8c6?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Bagdad", country: "Irak", code: "iq", pop: 7921000 , img: "https://images.unsplash.com/photo-1578895101408-1a36b834405b?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Hongkong", country: "Kiina", code: "hk", pop: 7536000 , img: "https://images.unsplash.com/photo-1536599424071-0b215a388ba7?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Pune", country: "Intia", code: "in", pop: 7346000 , img: "https://images.unsplash.com/photo-1600100397608-f010e423e971?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Santiago", country: "Chile", code: "cl", pop: 6951000 , img: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Madrid", country: "Espanja", code: "es", pop: 6798000 , img: "https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Toronto", country: "Kanada", code: "ca", pop: 6431000 , img: "https://images.unsplash.com/photo-1517090504586-fde19ea6062f?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Dallas", country: "Yhdysvallat", code: "us", pop: 6574000 , img: "https://images.unsplash.com/photo-1545128485-c400e7702796?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Houston", country: "Yhdysvallat", code: "us", pop: 6813000 , img: "https://images.unsplash.com/photo-1530089711124-9ca36fb9e3e3?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Miami", country: "Yhdysvallat", code: "us", pop: 6306000 , img: "https://images.unsplash.com/photo-1506966953602-c5d5c7f75dc9?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Singapore", country: "Singapore", code: "sg", pop: 6037000 , img: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Philadelphia", country: "Yhdysvallat", code: "us", pop: 5776000 , img: "https://images.unsplash.com/photo-1569761316261-9a8696fa2ca3?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Atlanta", country: "Yhdysvallat", code: "us", pop: 6144000 , img: "https://images.unsplash.com/photo-1575917640962-103c7cc2de74?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Barcelona", country: "Espanja", code: "es", pop: 5712000 , img: "https://images.unsplash.com/photo-1583422409516-2895a77efded?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Pietari", country: "Venäjä", code: "ru", pop: 5598000 , img: "https://images.unsplash.com/photo-1556610961-2f4878782936?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Nairobi", country: "Kenia", code: "ke", pop: 5541000 , img: "https://images.unsplash.com/photo-1611348524140-53c9a25263d6?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Addis Abeba", country: "Etiopia", code: "et", pop: 5704000 , img: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Washington D.C.", country: "Yhdysvallat", code: "us", pop: 5490000 , img: "https://images.unsplash.com/photo-1501466044931-626978124c64?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Johannesburg", country: "Etelä-Afrikka", code: "za", pop: 6324000 , img: "https://images.unsplash.com/photo-1577948000111-9c970dfe3743?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Khartum", country: "Sudan", code: "sd", pop: 6534000 , img: "https://images.unsplash.com/photo-1509316785289-025f5b846b35?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Yangon", country: "Myanmar", code: "mm", pop: 5708000 , img: "https://images.unsplash.com/photo-1528181304800-259b08848526?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Aleksandria", country: "Egypti", code: "eg", pop: 5692000 , img: "https://images.unsplash.com/photo-1539650116574-8efeb43e2750?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Abidjan", country: "Norsunluurannikko", code: "ci", pop: 5865000 , img: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Guadalajara", country: "Meksiko", code: "mx", pop: 5508000 , img: "https://images.unsplash.com/photo-1518638150340-f706e86654de?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Ankara", country: "Turkki", code: "tr", pop: 5478000 , img: "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Melbourne", country: "Australia", code: "au", pop: 5316000 , img: "https://images.unsplash.com/photo-1514395462725-fb4566210144?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Sydney", country: "Australia", code: "au", pop: 5185000 , img: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Monterrey", country: "Meksiko", code: "mx", pop: 5228000 , img: "https://images.unsplash.com/photo-1512813194878-dcf12438b9df?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Los Angeles", country: "Yhdysvallat", code: "us", pop: 3821000 , img: "https://images.unsplash.com/photo-1534190760961-74e8c1c5c3da?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Kapkaupunki", country: "Etelä-Afrikka", code: "za", pop: 4978000 , img: "https://images.unsplash.com/photo-1580060839134-75a5edca2e99?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Jedda", country: "Saudi-Arabia", code: "sa", pop: 4951000 , img: "https://images.unsplash.com/photo-1578895101408-1a36b834405b?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Durban", country: "Etelä-Afrikka", code: "za", pop: 4273000 , img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Kabul", country: "Afganistan", code: "af", pop: 4728000 , img: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Casablanca", country: "Marokko", code: "ma", pop: 3938000 , img: "https://images.unsplash.com/photo-1565018054866-968e24ce218b?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Montreal", country: "Kanada", code: "ca", pop: 4342000 , img: "https://images.unsplash.com/photo-1519178614-68673b201f36?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Rooma", country: "Italia", code: "it", pop: 4332000 , img: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Busan", country: "Etelä-Korea", code: "kr", pop: 3453000 , img: "https://images.unsplash.com/photo-1578895101408-1a36b834405b?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Berliini", country: "Saksa", code: "de", pop: 3577000 , img: "https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Ateena", country: "Kreikka", code: "gr", pop: 3155000 , img: "https://images.unsplash.com/photo-1555993539-1732b0258235?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Milano", country: "Italia", code: "it", pop: 3161000 , img: "https://images.unsplash.com/photo-1513581166391-887a96ddeafd?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Kööpenhamina", country: "Tanska", code: "dk", pop: 1391000 , img: "https://images.unsplash.com/photo-1513622470522-26c3c8a854bc?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Tukholma", country: "Ruotsi", code: "se", pop: 1723000 , img: "https://images.unsplash.com/photo-1509356843151-3e7d96241e11?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Helsinki", country: "Suomi", code: "fi", pop: 1346000 , img: "https://images.unsplash.com/photo-1538332576228-eb5b4c4de6f5?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Oslo", country: "Norja", code: "no", pop: 1102000 , img: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Wien", country: "Itävalta", code: "at", pop: 1990000 , img: "https://images.unsplash.com/photo-1516550893923-42d28e5677af?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Varsova", country: "Puola", code: "pl", pop: 1862000 , img: "https://images.unsplash.com/photo-1519197924294-4ba991a11128?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Budapest", country: "Unkari", code: "hu", pop: 1780000 , img: "https://images.unsplash.com/photo-1549877452-9c387954fbc2?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Praha", country: "Tšekki", code: "cz", pop: 1335000 , img: "https://images.unsplash.com/photo-1541849546-216549ae216d?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Bryssel", country: "Belgia", code: "be", pop: 2132000 , img: "https://images.unsplash.com/photo-1559113202-c916b8e44373?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Amsterdam", country: "Alankomaat", code: "nl", pop: 1182000 , img: "https://images.unsplash.com/photo-1512470876302-972faa2aa9a4?auto=format&fit=crop&w=1200&q=80" },
+            { name: "Lissabon", country: "Portugali", code: "pt", pop: 3015000 , img: "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?auto=format&fit=crop&w=1200&q=80" }
+        ];
+
+        let deck = [];
+        let leftCity = null;
+        let rightCity = null;
+        let score = 0;
+        let highScore = parseInt(localStorage.getItem('kaupungitHighScore') || '0', 10);
+        let isAnimating = false;
+
+        function formatNumber(num) {
+            return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        }
+
+        function shuffle(array) {
+            const copy = [...array];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function getNextCity(excludeName) {
+            if (deck.length === 0) {
+                deck = shuffle(cities);
+            }
+            let next = deck.pop();
+            if (next.name === excludeName) {
+                if (deck.length === 0) deck = shuffle(cities);
+                next = deck.pop();
+            }
+            return next;
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('score-display').textContent = `Pisteet: ${score}`;
+            document.getElementById('high-score-display').textContent = `Ennätys: ${highScore}`;
+        }
+
+        function renderRound() {
+            const leftFlagUrl = `https://flagcdn.com/w320/${leftCity.code}.png`;
+            const rightFlagUrl = `https://flagcdn.com/w320/${rightCity.code}.png`;
+
+            document.getElementById('left-bg-flag').src = leftCity.img;
+            document.getElementById('left-flag').src = leftFlagUrl;
+            document.getElementById('left-country').textContent = leftCity.country;
+            document.getElementById('left-name').textContent = leftCity.name;
+            document.getElementById('left-area').textContent = formatNumber(leftCity.pop);
+
+            document.getElementById('right-bg-flag').src = rightCity.img;
+            document.getElementById('right-flag').src = rightFlagUrl;
+            document.getElementById('right-country').textContent = rightCity.country;
+            document.getElementById('right-name').textContent = rightCity.name;
+            document.getElementById('comparison-caption').textContent = `kuin metropolissa ${leftCity.name}`;
+
+            document.getElementById('controls-box').style.display = 'flex';
+            document.getElementById('revealed-box').classList.remove('visible');
+            document.getElementById('btn-higher').disabled = false;
+            document.getElementById('btn-lower').disabled = false;
+
+            const vsBadge = document.getElementById('vs-badge');
+            vsBadge.textContent = 'VS';
+            vsBadge.className = 'vs-badge';
+        }
+
+        function animateValue(element, start, end, duration, callback) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const current = easeOut * (end - start) + start;
+                element.textContent = formatNumber(Math.floor(current));
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    element.textContent = formatNumber(end);
+                    if (callback) callback();
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        function makeGuess(choice) {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            document.getElementById('btn-higher').disabled = true;
+            document.getElementById('btn-lower').disabled = true;
+            document.getElementById('controls-box').style.display = 'none';
+
+            const revealedBox = document.getElementById('revealed-box');
+            const rightAreaEl = document.getElementById('right-area');
+            revealedBox.classList.add('visible');
+
+            const isCorrect =
+                (choice === 'higher' && rightCity.pop >= leftCity.pop) ||
+                (choice === 'lower' && rightCity.pop <= leftCity.pop);
+
+            animateValue(rightAreaEl, 0, rightCity.pop, 900, () => {
+                const vsBadge = document.getElementById('vs-badge');
+
+                if (isCorrect) {
+                    vsBadge.textContent = '✓';
+                    vsBadge.classList.add('correct');
+                    score++;
+                    if (score > highScore) {
+                        highScore = score;
+                        localStorage.setItem('kaupungitHighScore', highScore.toString());
+                    }
+                    updateScoreDisplay();
+
+                    setTimeout(() => {
+                        leftCity = rightCity;
+                        rightCity = getNextCity(leftCity.name);
+                        isAnimating = false;
+                        renderRound();
+                    }, 1100);
+                } else {
+                    vsBadge.textContent = '✕';
+                    vsBadge.classList.add('wrong');
+
+                    setTimeout(() => {
+                        showGameOver();
+                        isAnimating = false;
+                    }, 1100);
+                }
+            });
+        }
+
+        function showGameOver() {
+            const diffText = rightCity.pop > leftCity.pop ? "suurempi" : "pienempi";
+            document.getElementById('gameover-fact').textContent =
+                `Metropolialueella ${rightCity.name} (${formatNumber(rightCity.pop)} asukasta) on ${diffText} asukasluku kuin metropolissa ${leftCity.name} (${formatNumber(leftCity.pop)} asukasta).`;
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('final-highscore').textContent = highScore;
+            document.getElementById('gameover-overlay').classList.add('active');
+        }
+
+        function startNewGame() {
+            document.getElementById('gameover-overlay').classList.remove('active');
+            score = 0;
+            updateScoreDisplay();
+            deck = shuffle(cities);
+            leftCity = deck.pop();
+            rightCity = getNextCity(leftCity.name);
+            renderRound();
+        }
+
+        startNewGame();
+    </script>
+</body>
+</html>
