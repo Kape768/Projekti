@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+
+<html lang="fi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Valtioiden väkiluku – Suurempi vai pienempi</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800\&display=swap%22 rel="stylesheet">
+
+    <style>
+
+        * {
+
+            box-sizing: border-box;
+
+            margin: 0;
+
+            padding: 0;
+
+            user-select: none;
+
+        }
+
+
+
+        body {
+
+            font-family: 'Montserrat', sans-serif;
+
+            background: linear-gradient(180deg, #0b4858 0%, #165e6c 55%, #376661 85%, #625d49 100%);
+
+            color: #ffffff;
+
+            height: 100vh;
+
+            width: 100vw;
+
+            overflow: hidden;
+
+            position: relative;
+
+        }
+
+
+
+        /* Yläpalkki kuten kategoriavalikossa */
+
+        .top-bar {
+
+            position: fixed;
+
+            top: 0;
+
+            left: 0;
+
+            width: 100%;
+
+            padding: 18px 28px;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            z-index: 30;
+
+            pointer-events: none;
+
+        }
+
+
+
+        .game-title {
+
+            font-size: 1.15rem;
+
+            font-weight: 700;
+
+            color: #ffffff;
+
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+
+            pointer-events: auto;
+
+        }
+
+
+
+        /* Pinkki painike kategoriavalikon tyylillä (#d66885) */
+
+        .back-btn {
+
+            background-color: #d66885;
+
+            color: #ffffff;
+
+            text-decoration: none;
+
+            font-size: 0.85rem;
+
+            font-weight: 600;
+
+            padding: 10px 18px;
+
+            border-radius: 6px;
+
+            border: none;
+
+            cursor: pointer;
+
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+
+            transition: transform 0.15s ease, background-color 0.2s ease;
+
+            pointer-events: auto;
+
+        }
+
+
+
+        .back-btn:hover {
+
+            background-color: #e37995;
+
+            transform: translateY(-1px);
+
+        }
+
+
+
+        .back-btn:active {
+
+            transform: translateY(1px);
+
+        }
+
+
+
+        /* Jaettu pelinäkymä */
+
+        .game-container {
+
+            display: flex;
+
+            width: 100%;
+
+            height: 100%;
+
+            position: relative;
+
+        }
+
+
+
+        .panel {
+
+            flex: 1;
+
+            height: 100%;
+
+            position: relative;
+
+            display: flex;
+
+            flex-direction: column;
+
+            justify-content: center;
+
+            align-items: center;
+
+            text-align: center;
+
+            padding: 40px 30px;
+
+            overflow: hidden;
+
+        }
+
+
+
+        /* Taustalla himmennetty valtion lippu + teeman mukainen liukuväri */
+
+        .panel-bg-flag {
+
+            position: absolute;
+
+            inset: -15%;
+
+            width: 130%;
+
+            height: 130%;
+
+            object-fit: cover;
+
+            filter: blur(5px) brightness(0.45) saturate(1.15);
+
+            opacity: 0.45;
+
+            z-index: 0;
+
+            transition: opacity 0.4s ease;
+
+            pointer-events: none;
+
+        }
+
+
+
+        .panel::before {
+
+            content: '';
+
+            position: absolute;
+
+            inset: 0;
+
+            background: linear-gradient(
+
+                180deg,
+
+                rgba(11, 72, 88, 0.72) 0%,
+
+                rgba(22, 94, 108, 0.65) 55%,
+
+                rgba(55, 102, 97, 0.78) 85%,
+
+                rgba(98, 93, 73, 0.88) 100%
+
+            );
+
+            z-index: 1;
+
+        }
+
+
+
+        .panel-left {
+
+            border-right: 1px solid rgba(255, 255, 255, 0.16);
+
+        }
+
+
+
+        .panel-content {
+
+            position: relative;
+
+            z-index: 2;
+
+            max-width: 500px;
+
+            width: 100%;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+        }
+
+
+
+        .flag-badge {
+
+            width: 84px;
+
+            height: 56px;
+
+            border-radius: 8px;
+
+            object-fit: cover;
+
+            margin-bottom: 18px;
+
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+
+            border: 2px solid rgba(255, 255, 255, 0.35);
+
+            background-color: rgba(255, 255, 255, 0.1);
+
+        }
+
+
+
+        .country-name {
+
+            font-size: clamp(1.85rem, 3.3vw, 3.1rem);
+
+            font-weight: 800;
+
+            line-height: 1.15;
+
+            margin-bottom: 10px;
+
+            text-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+
+        }
+
+
+
+        .subtitle-text {
+
+            font-size: 1rem;
+
+            font-weight: 400;
+
+            color: rgba(255, 255, 255, 0.92);
+
+            margin-bottom: 10px;
+
+        }
+
+
+
+        .area-value {
+
+            font-size: clamp(2.3rem, 4vw, 3.6rem);
+
+            font-weight: 800;
+
+            color: #f7e06d;
+
+            text-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+
+            margin: 6px 0;
+
+            letter-spacing: -0.5px;
+
+        }
+
+
+
+        .unit-text {
+
+            font-size: 0.95rem;
+
+            font-weight: 500;
+
+            color: rgba(255, 255, 255, 0.88);
+
+        }
+
+
+
+        /* Suurempi / Pienempi -painikkeet kategoriavalikon pinkillä värillä (#d66885) */
+
+        .controls {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 12px;
+
+            margin: 12px 0 16px;
+
+            width: 220px;
+
+        }
+
+
+
+        .guess-btn {
+
+            background-color: #d66885;
+
+            border: 2px solid rgba(255, 255, 255, 0.25);
+
+            color: #ffffff;
+
+            font-family: 'Montserrat', sans-serif;
+
+            font-size: 1rem;
+
+            font-weight: 700;
+
+            padding: 13px 24px;
+
+            border-radius: 50px;
+
+            cursor: pointer;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 10px;
+
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.32);
+
+            transition: all 0.18s ease;
+
+        }
+
+
+
+        .guess-btn:hover:not(:disabled) {
+
+            background-color: #e37995;
+
+            border-color: #ffffff;
+
+            transform: scale(1.04);
+
+            box-shadow: 0 8px 22px rgba(214, 104, 133, 0.45);
+
+        }
+
+
+
+        .guess-btn:active:not(:disabled) {
+
+            transform: scale(0.98);
+
+        }
+
+
+
+        .guess-btn:disabled {
+
+            opacity: 0.65;
+
+            cursor: default;
+
+        }
+
+
+
+        .arrow-icon {
+
+            font-size: 0.8rem;
+
+        }
+
+
+
+        .comparison-caption {
+
+            font-size: 0.92rem;
+
+            color: rgba(255, 255, 255, 0.92);
+
+            max-width: 360px;
+
+            line-height: 1.4;
+
+        }
+
+
+
+        /* Keskellä oleva VS-ympyrä */
+
+        .vs-badge {
+
+            position: absolute;
+
+            top: 50%;
+
+            left: 50%;
+
+            transform: translate(-50%, -50%);
+
+            width: 68px;
+
+            height: 68px;
+
+            border-radius: 50%;
+
+            background-color: #d66885;
+
+            color: #161616;
+
+            font-size: 1.35rem;
+
+            font-weight: 800;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            z-index: 20;
+
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+
+        }
+
+
+
+        .vs-badge.correct {
+
+            background-color: #2ecc71;
+
+            color: #ffffff;
+
+            transform: translate(-50%, -50%) scale(1.15);
+
+        }
+
+
+
+        .vs-badge.wrong {
+
+            background-color: #e74c3c;
+
+            color: #ffffff;
+
+            transform: translate(-50%, -50%) scale(1.15);
+
+        }
+
+
+
+        /* Alareunan pistelaskurit */
+
+        .bottom-hud {
+
+            position: fixed;
+
+            bottom: 0;
+
+            left: 0;
+
+            width: 100%;
+
+            padding: 18px 28px;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            z-index: 25;
+
+            pointer-events: none;
+
+            font-size: 1.05rem;
+
+            font-weight: 700;
+
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.75);
+
+        }
+
+
+
+        .revealed-box {
+
+            display: none;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            margin: 6px 0;
+
+        }
+
+
+
+        .revealed-box.visible {
+
+            display: flex;
+
+        }
+
+
+
+        /* Game Over -näkymä */
+
+        .gameover-overlay {
+
+            position: fixed;
+
+            inset: 0;
+
+            background: rgba(11, 52, 64, 0.9);
+
+            backdrop-filter: blur(8px);
+
+            z-index: 50;
+
+            display: none;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            justify-content: center;
+
+            text-align: center;
+
+            padding: 24px;
+
+            animation: fadeIn 0.35s ease forwards;
+
+        }
+
+
+
+        .gameover-overlay.active {
+
+            display: flex;
+
+        }
+
+
+
+        @keyframes fadeIn {
+
+            from { opacity: 0; }
+
+            to { opacity: 1; }
+
+        }
+
+
+
+        .gameover-card {
+
+            background: linear-gradient(160deg, #135363 0%, #0d3a46 100%);
+
+            border: 2px solid rgba(255, 255, 255, 0.18);
+
+            border-radius: 20px;
+
+            padding: 40px 36px;
+
+            max-width: 450px;
+
+            width: 100%;
+
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+
+        }
+
+
+
+        .gameover-title {
+
+            font-size: 2rem;
+
+            font-weight: 800;
+
+            color: #d66885;
+
+            margin-bottom: 10px;
+
+        }
+
+
+
+        .gameover-fact {
+
+            font-size: 0.95rem;
+
+            color: rgba(255, 255, 255, 0.9);
+
+            margin-bottom: 24px;
+
+            line-height: 1.5;
+
+        }
+
+
+
+        .score-summary {
+
+            display: flex;
+
+            justify-content: space-around;
+
+            background: rgba(0, 0, 0, 0.25);
+
+            border-radius: 12px;
+
+            padding: 16px;
+
+            margin-bottom: 28px;
+
+        }
+
+
+
+        .score-stat span {
+
+            display: block;
+
+            font-size: 0.8rem;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1px;
+
+            color: rgba(255, 255, 255, 0.75);
+
+            margin-bottom: 4px;
+
+        }
+
+
+
+        .score-stat strong {
+
+            font-size: 2rem;
+
+            font-weight: 800;
+
+            color: #f7e06d;
+
+        }
+
+
+
+        .gameover-actions {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 12px;
+
+        }
+
+
+
+        .play-again-btn {
+
+            background-color: #d66885;
+
+            color: #ffffff;
+
+            border: none;
+
+            border-radius: 50px;
+
+            padding: 14px 28px;
+
+            font-family: 'Montserrat', sans-serif;
+
+            font-size: 1rem;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+
+            transition: transform 0.15s ease, background-color 0.2s ease;
+
+        }
+
+
+
+        .play-again-btn:hover {
+
+            background-color: #e37995;
+
+            transform: scale(1.03);
+
+        }
+
+
+
+        .menu-link-btn {
+
+            background: transparent;
+
+            color: rgba(255, 255, 255, 0.9);
+
+            border: 1px solid rgba(255, 255, 255, 0.35);
+
+            border-radius: 50px;
+
+            padding: 12px 24px;
+
+            font-family: 'Montserrat', sans-serif;
+
+            font-size: 0.9rem;
+
+            font-weight: 600;
+
+            text-decoration: none;
+
+            transition: all 0.2s ease;
+
+        }
+
+
+
+        .menu-link-btn:hover {
+
+            background: rgba(255, 255, 255, 0.12);
+
+            color: #ffffff;
+
+        }
+
+
+
+        /* Responsiivisuus mobiililaitteille */
+
+        @media (max-width: 768px) {
+
+            .game-container {
+
+                flex-direction: column;
+
+            }
+
+            .panel-left {
+
+                border-right: none;
+
+                border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+
+            }
+
+            .panel {
+
+                padding: 20px 16px;
+
+            }
+
+            .flag-badge {
+
+                width: 56px;
+
+                height: 38px;
+
+                margin-bottom: 8px;
+
+            }
+
+            .country-name {
+
+                font-size: 1.55rem;
+
+                margin-bottom: 4px;
+
+            }
+
+            .area-value {
+
+                font-size: 1.85rem;
+
+            }
+
+            .controls {
+
+                flex-direction: row;
+
+                width: auto;
+
+                gap: 10px;
+
+            }
+
+            .guess-btn {
+
+                padding: 10px 18px;
+
+                font-size: 0.9rem;
+
+            }
+
+            .vs-badge {
+
+                width: 52px;
+
+                height: 52px;
+
+                font-size: 1.05rem;
+
+            }
+
+            .top-bar {
+
+                padding: 12px 16px;
+
+            }
+
+            .game-title {
+
+                font-size: 0.95rem;
+
+            }
+
+            .back-btn {
+
+                padding: 7px 12px;
+
+                font-size: 0.78rem;
+
+            }
+
+            .bottom-hud {
+
+                padding: 10px 16px;
+
+                font-size: 0.9rem;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+
+
+    <!-- Yläpalkki -->
+
+    <header class="top-bar">
+
+        <div class="game-title">Suurempi vai pienempi – Valtioiden väkiluku</div>
+
+        <a href="lower-higher.html" class="back-btn">← Takaisin etusivulle</a>
+
+    </header>
+
+
+
+    <!-- Pelialue -->
+
+    <main class="game-container">
+
+        <!-- Vasen valtio -->
+
+        <section class="panel panel-left" id="left-panel">
+
+            <img id="left-bg-flag" class="panel-bg-flag" src="" alt="">
+
+            <div class="panel-content">
+
+                <img id="left-flag" class="flag-badge" src="" alt="Lippu">
+
+                <h1 class="country-name" id="left-name">Suomi</h1>
+
+                <p class="subtitle-text">väkiluku on</p>
+
+                <div class="area-value" id="left-area">338 455</div>
+
+                <p class="unit-text">asukasta (2024)</p>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- Keskellä VS-ympyrä -->
+
+        <div class="vs-badge" id="vs-badge">VS</div>
+
+
+
+        <!-- Oikea valtio -->
+
+        <section class="panel panel-right" id="right-panel">
+
+            <img id="right-bg-flag" class="panel-bg-flag" src="" alt="">
+
+            <div class="panel-content">
+
+                <img id="right-flag" class="flag-badge" src="" alt="Lippu">
+
+                <h2 class="country-name" id="right-name">Ruotsi</h2>
+
+                <p class="subtitle-text">väkiluku on</p>
+
+
+
+                <!-- Arvauspainikkeet -->
+
+                <div class="controls" id="controls-box">
+
+                    <button class="guess-btn" id="btn-higher" onclick="makeGuess('higher')">
+
+                        Suurempi <span class="arrow-icon">▲</span>
+
+                    </button>
+
+                    <button class="guess-btn" id="btn-lower" onclick="makeGuess('lower')">
+
+                        Pienempi <span class="arrow-icon">▼</span>
+
+                    </button>
+
+                </div>
+
+
+
+                <!-- Paljastettu väkiluku -->
+
+                <div class="revealed-box" id="revealed-box">
+
+                    <div class="area-value" id="right-area">0</div>
+
+                    <p class="unit-text">asukasta (2024)</p>
+
+                </div>
+
+
+
+                <p class="comparison-caption" id="comparison-caption">
+
+                    kuin valtiolla Suomi
+
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+
+    <!-- Alareunan pistenäyttö -->
+
+    <footer class="bottom-hud">
+
+        <div id="high-score-display">Ennätys: 0</div>
+
+        <div id="score-display">Pisteet: 0</div>
+
+    </footer>
+
+
+
+    <!-- Game Over -ikkuna -->
+
+    <div class="gameover-overlay" id="gameover-overlay">
+
+        <div class="gameover-card">
+
+            <h2 class="gameover-title">Väärä arvaus!</h2>
+
+            <p class="gameover-fact" id="gameover-fact"></p>
+
+            <div class="score-summary">
+
+                <div class="score-stat">
+
+                    <span>Pisteet</span>
+
+                    <strong id="final-score">0</strong>
+
+                </div>
+
+                <div class="score-stat">
+
+                    <span>Ennätys</span>
+
+                    <strong id="final-highscore">0</strong>
+
+                </div>
+
+            </div>
+
+            <div class="gameover-actions">
+
+                <button class="play-again-btn" onclick="startNewGame()">Pelaa uudelleen</button>
+
+                <a href="lower-higher.html" class="menu-link-btn">← Takaisin pelikategorioihin</a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <script>
+
+        // Kaikki 195 itsenäistä valtiota (193 YK:n jäsenvaltiota + Vatikaanivaltio + Palestiina) ja viralliset väkilukut (asukasta)
+
+        // Väkiluvut haetaan World Bankin avoimesta rajapinnasta (vuosi 2024).
+        const countries = [
+
+            { name: "Afganistan", code: "af", population: 0 },
+
+            { name: "Alankomaat", code: "nl", population: 0 },
+
+            { name: "Albania", code: "al", population: 0 },
+
+            { name: "Algeria", code: "dz", population: 0 },
+
+            { name: "Andorra", code: "ad", population: 0 },
+
+            { name: "Angola", code: "ao", population: 0 },
+
+            { name: "Antigua ja Barbuda", code: "ag", population: 0 },
+
+            { name: "Argentiina", code: "ar", population: 0 },
+
+            { name: "Armenia", code: "am", population: 0 },
+
+            { name: "Australia", code: "au", population: 0 },
+
+            { name: "Azerbaidžan", code: "az", population: 0 },
+
+            { name: "Bahama", code: "bs", population: 0 },
+
+            { name: "Bahrain", code: "bh", population: 0 },
+
+            { name: "Bangladesh", code: "bd", population: 0 },
+
+            { name: "Barbados", code: "bb", population: 0 },
+
+            { name: "Belgia", code: "be", population: 0 },
+
+            { name: "Belize", code: "bz", population: 0 },
+
+            { name: "Benin", code: "bj", population: 0 },
+
+            { name: "Bhutan", code: "bt", population: 0 },
+
+            { name: "Bolivia", code: "bo", population: 0 },
+
+            { name: "Bosnia ja Hertsegovina", code: "ba", population: 0 },
+
+            { name: "Botswana", code: "bw", population: 0 },
+
+            { name: "Brasilia", code: "br", population: 0 },
+
+            { name: "Brunei", code: "bn", population: 0 },
+
+            { name: "Bulgaria", code: "bg", population: 0 },
+
+            { name: "Burkina Faso", code: "bf", population: 0 },
+
+            { name: "Burundi", code: "bi", population: 0 },
+
+            { name: "Chile", code: "cl", population: 0 },
+
+            { name: "Costa Rica", code: "cr", population: 0 },
+
+            { name: "Djibouti", code: "dj", population: 0 },
+
+            { name: "Dominica", code: "dm", population: 0 },
+
+            { name: "Dominikaaninen tasavalta", code: "do", population: 0 },
+
+            { name: "Ecuador", code: "ec", population: 0 },
+
+            { name: "Egypti", code: "eg", population: 0 },
+
+            { name: "El Salvador", code: "sv", population: 0 },
+
+            { name: "Eritrea", code: "er", population: 0 },
+
+            { name: "Espanja", code: "es", population: 0 },
+
+            { name: "Eswatini", code: "sz", population: 0 },
+
+            { name: "Etelä-Afrikka", code: "za", population: 0 },
+
+            { name: "Etelä-Korea", code: "kr", population: 0 },
+
+            { name: "Etelä-Sudan", code: "ss", population: 0 },
+
+            { name: "Etiopia", code: "et", population: 0 },
+
+            { name: "Fidži", code: "fj", population: 0 },
+
+            { name: "Filippiinit", code: "ph", population: 0 },
+
+            { name: "Gabon", code: "ga", population: 0 },
+
+            { name: "Gambia", code: "gm", population: 0 },
+
+            { name: "Georgia", code: "ge", population: 0 },
+
+            { name: "Ghana", code: "gh", population: 0 },
+
+            { name: "Grenada", code: "gd", population: 0 },
+
+            { name: "Guatemala", code: "gt", population: 0 },
+
+            { name: "Guinea", code: "gn", population: 0 },
+
+            { name: "Guinea-Bissau", code: "gw", population: 0 },
+
+            { name: "Guyana", code: "gy", population: 0 },
+
+            { name: "Haiti", code: "ht", population: 0 },
+
+            { name: "Honduras", code: "hn", population: 0 },
+
+            { name: "Indonesia", code: "id", population: 0 },
+
+            { name: "Intia", code: "in", population: 0 },
+
+            { name: "Irak", code: "iq", population: 0 },
+
+            { name: "Iran", code: "ir", population: 0 },
+
+            { name: "Irlanti", code: "ie", population: 0 },
+
+            { name: "Islanti", code: "is", population: 0 },
+
+            { name: "Iso-Britannia", code: "gb", population: 0 },
+
+            { name: "Israel", code: "il", population: 0 },
+
+            { name: "Italia", code: "it", population: 0 },
+
+            { name: "Itä-Timor", code: "tl", population: 0 },
+
+            { name: "Itävalta", code: "at", population: 0 },
+
+            { name: "Jamaika", code: "jm", population: 0 },
+
+            { name: "Japani", code: "jp", population: 0 },
+
+            { name: "Jemen", code: "ye", population: 0 },
+
+            { name: "Jordania", code: "jo", population: 0 },
+
+            { name: "Kambodža", code: "kh", population: 0 },
+
+            { name: "Kamerun", code: "cm", population: 0 },
+
+            { name: "Kanada", code: "ca", population: 0 },
+
+            { name: "Kap Verde", code: "cv", population: 0 },
+
+            { name: "Kazakstan", code: "kz", population: 0 },
+
+            { name: "Kenia", code: "ke", population: 0 },
+
+            { name: "Keski-Afrikan tasavalta", code: "cf", population: 0 },
+
+            { name: "Kiina", code: "cn", population: 0 },
+
+            { name: "Kirgisia", code: "kg", population: 0 },
+
+            { name: "Kiribati", code: "ki", population: 0 },
+
+            { name: "Kolumbia", code: "co", population: 0 },
+
+            { name: "Komorit", code: "km", population: 0 },
+
+            { name: "Kongon demokraattinen tasavalta", code: "cd", population: 0 },
+
+            { name: "Kongon tasavalta", code: "cg", population: 0 },
+
+            { name: "Kreikka", code: "gr", population: 0 },
+
+            { name: "Kroatia", code: "hr", population: 0 },
+
+            { name: "Kuuba", code: "cu", population: 0 },
+
+            { name: "Kuwait", code: "kw", population: 0 },
+
+            { name: "Kypros", code: "cy", population: 0 },
+
+            { name: "Laos", code: "la", population: 0 },
+
+            { name: "Latvia", code: "lv", population: 0 },
+
+            { name: "Lesotho", code: "ls", population: 0 },
+
+            { name: "Libanon", code: "lb", population: 0 },
+
+            { name: "Liberia", code: "lr", population: 0 },
+
+            { name: "Libya", code: "ly", population: 0 },
+
+            { name: "Liechtenstein", code: "li", population: 0 },
+
+            { name: "Liettua", code: "lt", population: 0 },
+
+            { name: "Luxemburg", code: "lu", population: 0 },
+
+            { name: "Madagaskar", code: "mg", population: 0 },
+
+            { name: "Malawi", code: "mw", population: 0 },
+
+            { name: "Malediivit", code: "mv", population: 0 },
+
+            { name: "Malesia", code: "my", population: 0 },
+
+            { name: "Mali", code: "ml", population: 0 },
+
+            { name: "Malta", code: "mt", population: 0 },
+
+            { name: "Marokko", code: "ma", population: 0 },
+
+            { name: "Marshallinsaaret", code: "mh", population: 0 },
+
+            { name: "Mauritania", code: "mr", population: 0 },
+
+            { name: "Mauritius", code: "mu", population: 0 },
+
+            { name: "Meksiko", code: "mx", population: 0 },
+
+            { name: "Mikronesia", code: "fm", population: 0 },
+
+            { name: "Moldova", code: "md", population: 0 },
+
+            { name: "Monaco", code: "mc", population: 0 },
+
+            { name: "Mongolia", code: "mn", population: 0 },
+
+            { name: "Montenegro", code: "me", population: 0 },
+
+            { name: "Mosambik", code: "mz", population: 0 },
+
+            { name: "Myanmar", code: "mm", population: 0 },
+
+            { name: "Namibia", code: "na", population: 0 },
+
+            { name: "Nauru", code: "nr", population: 0 },
+
+            { name: "Nepal", code: "np", population: 0 },
+
+            { name: "Nicaragua", code: "ni", population: 0 },
+
+            { name: "Niger", code: "ne", population: 0 },
+
+            { name: "Nigeria", code: "ng", population: 0 },
+
+            { name: "Norja", code: "no", population: 0 },
+
+            { name: "Norsunluurannikko", code: "ci", population: 0 },
+
+            { name: "Oman", code: "om", population: 0 },
+
+            { name: "Pakistan", code: "pk", population: 0 },
+
+            { name: "Palau", code: "pw", population: 0 },
+
+            { name: "Palestiina", code: "ps", population: 0 },
+
+            { name: "Panama", code: "pa", population: 0 },
+
+            { name: "Papua-Uusi-Guinea", code: "pg", population: 0 },
+
+            { name: "Paraguay", code: "py", population: 0 },
+
+            { name: "Peru", code: "pe", population: 0 },
+
+            { name: "Pohjois-Korea", code: "kp", population: 0 },
+
+            { name: "Pohjois-Makedonia", code: "mk", population: 0 },
+
+            { name: "Portugali", code: "pt", population: 0 },
+
+            { name: "Puola", code: "pl", population: 0 },
+
+            { name: "Päiväntasaajan Guinea", code: "gq", population: 0 },
+
+            { name: "Qatar", code: "qa", population: 0 },
+
+            { name: "Ranska", code: "fr", population: 0 },
+
+            { name: "Romania", code: "ro", population: 0 },
+
+            { name: "Ruanda", code: "rw", population: 0 },
+
+            { name: "Ruotsi", code: "se", population: 0 },
+
+            { name: "Saint Kitts ja Nevis", code: "kn", population: 0 },
+
+            { name: "Saint Lucia", code: "lc", population: 0 },
+
+            { name: "Saint Vincent ja Grenadiinit", code: "vc", population: 0 },
+
+            { name: "Saksa", code: "de", population: 0 },
+
+            { name: "Salomonsaaret", code: "sb", population: 0 },
+
+            { name: "Sambia", code: "zm", population: 0 },
+
+            { name: "Samoa", code: "ws", population: 0 },
+
+            { name: "San Marino", code: "sm", population: 0 },
+
+            { name: "São Tomé ja Príncipe", code: "st", population: 0 },
+
+            { name: "Saudi-Arabia", code: "sa", population: 0 },
+
+            { name: "Senegal", code: "sn", population: 0 },
+
+            { name: "Serbia", code: "rs", population: 0 },
+
+            { name: "Seychellit", code: "sc", population: 0 },
+
+            { name: "Sierra Leone", code: "sl", population: 0 },
+
+            { name: "Singapore", code: "sg", population: 0 },
+
+            { name: "Slovakia", code: "sk", population: 0 },
+
+            { name: "Slovenia", code: "si", population: 0 },
+
+            { name: "Somalia", code: "so", population: 0 },
+
+            { name: "Sri Lanka", code: "lk", population: 0 },
+
+            { name: "Sudan", code: "sd", population: 0 },
+
+            { name: "Suomi", code: "fi", population: 0 },
+
+            { name: "Suriname", code: "sr", population: 0 },
+
+            { name: "Sveitsi", code: "ch", population: 0 },
+
+            { name: "Syyria", code: "sy", population: 0 },
+
+            { name: "Tadžikistan", code: "tj", population: 0 },
+
+            { name: "Tansania", code: "tz", population: 0 },
+
+            { name: "Tanska", code: "dk", population: 0 },
+
+            { name: "Thaimaa", code: "th", population: 0 },
+
+            { name: "Togo", code: "tg", population: 0 },
+
+            { name: "Tonga", code: "to", population: 0 },
+
+            { name: "Trinidad ja Tobago", code: "tt", population: 0 },
+
+            { name: "Tšad", code: "td", population: 0 },
+
+            { name: "Tšekki", code: "cz", population: 0 },
+
+            { name: "Tunisia", code: "tn", population: 0 },
+
+            { name: "Turkki", code: "tr", population: 0 },
+
+            { name: "Turkmenistan", code: "tm", population: 0 },
+
+            { name: "Tuvalu", code: "tv", population: 0 },
+
+            { name: "Uganda", code: "ug", population: 0 },
+
+            { name: "Ukraina", code: "ua", population: 0 },
+
+            { name: "Unkari", code: "hu", population: 0 },
+
+            { name: "Uruguay", code: "uy", population: 0 },
+
+            { name: "Uusi-Seelanti", code: "nz", population: 0 },
+
+            { name: "Uzbekistan", code: "uz", population: 0 },
+
+            { name: "Valko-Venäjä", code: "by", population: 0 },
+
+            { name: "Vanuatu", code: "vu", population: 0 },
+
+            { name: "Vatikaanivaltio", code: "va", population: 0 },
+
+            { name: "Venezuela", code: "ve", population: 0 },
+
+            { name: "Venäjä", code: "ru", population: 0 },
+
+            { name: "Vietnam", code: "vn", population: 0 },
+
+            { name: "Viro", code: "ee", population: 0 },
+
+            { name: "Yhdysvallat", code: "us", population: 0 },
+
+            { name: "Yhdistyneet arabiemiirikunnat", code: "ae", population: 0 },
+
+            { name: "Zimbabwe", code: "zw", population: 0 }
+
+        ];
+        let deck = [];
+        let leftCountry = null;
+        let rightCountry = null;
+        let score = 0;
+        let highScore = parseInt(localStorage.getItem('vakilukuHighScore') || '0', 10);
+        let isAnimating = false;
+        function formatNumber(num) {
+            if (num < 1) {
+                return num.toString().replace('.', ',');
+            }
+            return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+        }
+        function shuffle(array) {
+            const copy = [...array];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+
+            return copy;
+
+        }
+
+
+
+        function getNextCountry(excludeName) {
+
+            if (deck.length === 0) {
+
+                deck = shuffle(countries);
+
+            }
+
+            let next = deck.pop();
+
+            if (next.name === excludeName) {
+
+                if (deck.length === 0) deck = shuffle(countries);
+
+                next = deck.pop();
+
+            }
+
+            return next;
+
+        }
+
+
+
+        function updateScoreDisplay() {
+
+            document.getElementById('score-display').textContent = `Pisteet: ${score}`;
+
+            document.getElementById('high-score-display').textContent = `Ennätys: ${highScore}`;
+
+        }
+
+
+
+        function renderRound() {
+
+            const leftFlagUrl = `https://flagcdn.com/w320/${leftCountry.code}.png`;
+
+            const rightFlagUrl = `https://flagcdn.com/w320/${rightCountry.code}.png`;
+
+
+
+            document.getElementById('left-bg-flag').src = leftFlagUrl;
+
+            document.getElementById('left-flag').src = leftFlagUrl;
+
+            document.getElementById('left-name').textContent = leftCountry.name;
+
+            document.getElementById('left-area').textContent = formatNumber(leftCountry.population);
+
+
+
+            document.getElementById('right-bg-flag').src = rightFlagUrl;
+
+            document.getElementById('right-flag').src = rightFlagUrl;
+
+            document.getElementById('right-name').textContent = rightCountry.name;
+
+            document.getElementById('comparison-caption').textContent = `kuin valtiolla ${leftCountry.name}`;
+
+
+
+            document.getElementById('controls-box').style.display = 'flex';
+
+            document.getElementById('revealed-box').classList.remove('visible');
+
+            document.getElementById('btn-higher').disabled = false;
+
+            document.getElementById('btn-lower').disabled = false;
+
+
+
+            const vsBadge = document.getElementById('vs-badge');
+
+            vsBadge.textContent = 'VS';
+
+            vsBadge.className = 'vs-badge';
+
+        }
+
+
+
+        function animateValue(element, start, end, duration, callback) {
+
+            let startTimestamp = null;
+
+            const step = (timestamp) => {
+
+                if (!startTimestamp) startTimestamp = timestamp;
+
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+
+                const current = easeOut * (end - start) + start;
+
+                element.textContent = end < 1 ? current.toFixed(2).replace('.', ',') : formatNumber(Math.floor(current));
+
+                if (progress < 1) {
+
+                    window.requestAnimationFrame(step);
+
+                } else {
+
+                    element.textContent = formatNumber(end);
+
+                    if (callback) callback();
+
+                }
+
+            };
+
+            window.requestAnimationFrame(step);
+
+        }
+
+
+
+        function makeGuess(choice) {
+
+            if (isAnimating) return;
+
+            isAnimating = true;
+
+
+
+            document.getElementById('btn-higher').disabled = true;
+
+            document.getElementById('btn-lower').disabled = true;
+
+            document.getElementById('controls-box').style.display = 'none';
+
+
+
+            const revealedBox = document.getElementById('revealed-box');
+
+            const rightAreaEl = document.getElementById('right-area');
+
+            revealedBox.classList.add('visible');
+
+
+
+            const isCorrect =
+
+                (choice === 'higher' && rightCountry.population >= leftCountry.population) ||
+
+                (choice === 'lower' && rightCountry.population <= leftCountry.population);
+
+
+
+            animateValue(rightAreaEl, 0, rightCountry.population, 900, () => {
+
+                const vsBadge = document.getElementById('vs-badge');
+
+
+
+                if (isCorrect) {
+
+                    vsBadge.textContent = '✓';
+
+                    vsBadge.classList.add('correct');
+
+                    score++;
+
+                    if (score > highScore) {
+
+                        highScore = score;
+
+                        localStorage.setItem('vakilukuHighScore', highScore.toString());
+
+                    }
+
+                    updateScoreDisplay();
+
+
+
+                    setTimeout(() => {
+
+                        leftCountry = rightCountry;
+
+                        rightCountry = getNextCountry(leftCountry.name);
+
+                        isAnimating = false;
+
+                        renderRound();
+
+                    }, 1100);
+
+                } else {
+
+                    vsBadge.textContent = '✕';
+
+                    vsBadge.classList.add('wrong');
+
+
+
+                    setTimeout(() => {
+
+                        showGameOver();
+
+                        isAnimating = false;
+
+                    }, 1100);
+
+                }
+
+            });
+
+        }
+        function showGameOver() {
+            const diffText = rightCountry.population > leftCountry.population ? "suurempi" : "pienempi";
+            document.getElementById('gameover-fact').textContent =
+                `${rightCountry.name} (${formatNumber(rightCountry.population)} asukasta) on väkilukultaan ${diffText} kuin ${leftCountry.name} (${formatNumber(leftCountry.population)} asukasta).`;
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('final-highscore').textContent = highScore;
+            document.getElementById('gameover-overlay').classList.add('active');
+        }
+        function startNewGame() {
+            document.getElementById('gameover-overlay').classList.remove('active');
+            score = 0;
+            updateScoreDisplay();
+            deck = shuffle(countries);
+            leftCountry = deck.pop();
+            rightCountry = getNextCountry(leftCountry.name);
+            renderRound();
+        }
+        async function loadPopulationData() {
+            try {
+                const response = await fetch('https://api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL?date=2024&format=json&per_page=400');
+                const data = await response.json();
+
+                if (!Array.isArray(data) || !Array.isArray(data[1])) {
+                    throw new Error('Väkilukutietoja ei voitu ladata.');
+                }
+                const populationByCode = {};
+                data[1].forEach(item => {
+                    if (item.country && item.country.id && item.value !== null) {
+                        populationByCode[item.country.id.toLowerCase()] = Math.round(item.value);
+                    }
+                });
+                countries.forEach(country => {
+                    country.population = populationByCode[country.code] || 0;
+                });
+                // Vatikaanille ei ole World Bankin tietokannassa erillistä lukua.
+                const vatican = countries.find(country => country.code === 'va');
+                if (vatican) vatican.population = 500;
+                // Poistetaan maat, joille ei saatu väkilukutietoa.
+                countries.splice(0, countries.length, ...countries.filter(country => country.population > 0));
+                startNewGame();
+            } catch (error) {
+                document.querySelector('.gameover-title').textContent = 'Tietojen lataaminen epäonnistui';
+                document.getElementById('gameover-fact').textContent =
+                    'Väkilukutietojen lataaminen vaatii internet-yhteyden. Päivitä sivu ja yritä uudelleen.';
+                document.getElementById('gameover-overlay').classList.add('active');
+                console.error(error);
+            }
+        }
+        loadPopulationData();
+    </script>
+</body>
+</html>
