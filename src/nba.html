@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA-pelaajien uran pisteet – Suurempi vai pienempi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(180deg, #0b4858 0%, #165e6c 55%, #376661 85%, #625d49 100%);
+            color: #ffffff;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Yläpalkki kuten kategoriavalikossa */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 18px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 30;
+            pointer-events: none;
+        }
+
+        .game-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            pointer-events: auto;
+        }
+
+        /* Pinkki painike kategoriavalikon tyylillä (#d66885) */
+        .back-btn {
+            background-color: #d66885;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 10px 18px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+            transition: transform 0.15s ease, background-color 0.2s ease;
+            pointer-events: auto;
+        }
+
+        .back-btn:hover {
+            background-color: #e37995;
+            transform: translateY(-1px);
+        }
+
+        .back-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Jaettu pelinäkymä */
+        .game-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .panel {
+            flex: 1;
+            height: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px 30px;
+            overflow: hidden;
+        }
+
+        /* Taustalla himmennetty valtion lippu + teeman mukainen liukuväri */
+        .panel-bg-flag {
+            position: absolute;
+            inset: -15%;
+            width: 130%;
+            height: 130%;
+            object-fit: cover;
+            filter: blur(0px) brightness(0.45) saturate(1.15);
+            opacity: 0.45;
+            z-index: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                180deg,
+                rgba(11, 72, 88, 0.72) 0%,
+                rgba(22, 94, 108, 0.65) 55%,
+                rgba(55, 102, 97, 0.78) 85%,
+                rgba(98, 93, 73, 0.88) 100%
+            );
+            z-index: 1;
+        }
+
+        .panel-left {
+            border-right: 1px solid rgba(255, 255, 255, 0.16);
+        }
+
+        .panel-content {
+            position: relative;
+            z-index: 2;
+            max-width: 500px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        
+        .player-portrait {
+            width: 124px;
+            height: 92px;
+            border-radius: 12px;
+            object-fit: cover;
+            object-position: top center;
+            margin-bottom: 10px;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        
+            .player-portrait {
+                width: 88px;
+                height: 66px;
+                margin-bottom: 6px;
+            }
+
+            .flag-badge {
+            width: 84px;
+            height: 56px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-bottom: 14px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .country-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: rgba(255, 255, 255, 0.78);
+            margin-bottom: 6px;
+        }
+
+        .country-name {
+            font-size: clamp(1.85rem, 3.3vw, 3.1rem);
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+        }
+
+        .subtitle-text {
+            font-size: 1rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.92);
+            margin-bottom: 10px;
+        }
+
+        .area-value {
+            font-size: clamp(2.3rem, 4vw, 3.6rem);
+            font-weight: 800;
+            color: #f7e06d;
+            text-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+            margin: 6px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .unit-text {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.88);
+        }
+
+        /* Suurempi / Pienempi -painikkeet kategoriavalikon pinkillä värillä (#d66885) */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 12px 0 16px;
+            width: 220px;
+        }
+
+        .guess-btn {
+            background-color: #d66885;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 13px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.32);
+            transition: all 0.18s ease;
+        }
+
+        .guess-btn:hover:not(:disabled) {
+            background-color: #e37995;
+            border-color: #ffffff;
+            transform: scale(1.04);
+            box-shadow: 0 8px 22px rgba(214, 104, 133, 0.45);
+        }
+
+        .guess-btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .guess-btn:disabled {
+            opacity: 0.65;
+            cursor: default;
+        }
+
+        .arrow-icon {
+            font-size: 0.8rem;
+        }
+
+        .comparison-caption {
+            font-size: 0.92rem;
+            color: rgba(255, 255, 255, 0.92);
+            max-width: 360px;
+            line-height: 1.4;
+        }
+
+        /* Keskellä oleva VS-ympyrä */
+        .vs-badge {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background-color: #d66885;
+            color: #161616;
+            font-size: 1.35rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+        }
+
+        .vs-badge.correct {
+            background-color: #2ecc71;
+            color: #ffffff;
+            transform: translate(-50%, -50%) scale(1.15);
+        }
+
+        .vs-badge.wrong {
+            background-color: #e74c3c;
+            color: #ffffff;
+            transform: translate(-50%, -50%) scale(1.15);
+        }
+
+        /* Alareunan pistelaskurit */
+        .bottom-hud {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 18px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 25;
+            pointer-events: none;
+            font-size: 1.05rem;
+            font-weight: 700;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.75);
+        }
+
+        .revealed-box {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin: 6px 0;
+        }
+
+        .revealed-box.visible {
+            display: flex;
+        }
+
+        /* Game Over -näkymä */
+        .gameover-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(11, 52, 64, 0.9);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 24px;
+            animation: fadeIn 0.35s ease forwards;
+        }
+
+        .gameover-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .gameover-card {
+            background: linear-gradient(160deg, #135363 0%, #0d3a46 100%);
+            border: 2px solid rgba(255, 255, 255, 0.18);
+            border-radius: 20px;
+            padding: 40px 36px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+        }
+
+        .gameover-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #d66885;
+            margin-bottom: 10px;
+        }
+
+        .gameover-fact {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .score-summary {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 28px;
+        }
+
+        .score-stat span {
+            display: block;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.75);
+            margin-bottom: 4px;
+        }
+
+        .score-stat strong {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #f7e06d;
+        }
+
+        .gameover-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .play-again-btn {
+            background-color: #d66885;
+            color: #ffffff;
+            border: none;
+            border-radius: 50px;
+            padding: 14px 28px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+            transition: transform 0.15s ease, background-color 0.2s ease;
+        }
+
+        .play-again-btn:hover {
+            background-color: #e37995;
+            transform: scale(1.03);
+        }
+
+        .menu-link-btn {
+            background: transparent;
+            color: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 50px;
+            padding: 12px 24px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .menu-link-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+        }
+
+        /* Responsiivisuus mobiililaitteille */
+        @media (max-width: 768px) {
+            .game-container {
+                flex-direction: column;
+            }
+            .panel-left {
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+            }
+            .panel {
+                padding: 20px 16px;
+            }
+            
+        .player-portrait {
+            width: 124px;
+            height: 92px;
+            border-radius: 12px;
+            object-fit: cover;
+            object-position: top center;
+            margin-bottom: 10px;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .flag-badge {
+                width: 56px;
+                height: 38px;
+                margin-bottom: 6px;
+            }
+            .country-name {
+                font-size: 1.55rem;
+                margin-bottom: 4px;
+            }
+            .area-value {
+                font-size: 1.85rem;
+            }
+            .controls {
+                flex-direction: row;
+                width: auto;
+                gap: 10px;
+            }
+            .guess-btn {
+                padding: 10px 18px;
+                font-size: 0.9rem;
+            }
+            .vs-badge {
+                width: 52px;
+                height: 52px;
+                font-size: 1.05rem;
+            }
+            .top-bar {
+                padding: 12px 16px;
+            }
+            .game-title {
+                font-size: 0.95rem;
+            }
+            .back-btn {
+                padding: 7px 12px;
+                font-size: 0.78rem;
+            }
+            .bottom-hud {
+                padding: 10px 16px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Yläpalkki -->
+    <header class="top-bar">
+        <div class="game-title">Suurempi vai pienempi – NBA-pelaajien uran pisteet</div>
+        <a href="lower-higher.html" class="back-btn">← Takaisin etusivulle</a>
+    </header>
+
+    <!-- Pelialue -->
+    <main class="game-container">
+        <!-- Vasen metropoli -->
+        <section class="panel panel-left" id="left-panel">
+            <img id="left-bg-flag" class="panel-bg-flag" src="" alt="">
+            <div class="panel-content">
+                <img id="left-portrait" class="player-portrait" src="" alt="Pelaajan kuva">
+                <img id="left-flag" class="flag-badge" src="" alt="Lippu">
+                <div class="country-label" id="left-country">Suomi</div>
+                <h1 class="country-name" id="left-name">Lauri Markkanen</h1>
+                <p class="subtitle-text">uran pisteet NBA:ssa ovat</p>
+                <div class="area-value" id="left-area">9 341</div>
+                <p class="unit-text">pistettä</p>
+            </div>
+        </section>
+
+        <!-- Keskellä VS-ympyrä -->
+        <div class="vs-badge" id="vs-badge">VS</div>
+
+        <!-- Oikea metropoli -->
+        <section class="panel panel-right" id="right-panel">
+            <img id="right-bg-flag" class="panel-bg-flag" src="" alt="">
+            <div class="panel-content">
+                <img id="right-portrait" class="player-portrait" src="" alt="Pelaajan kuva">
+                <img id="right-flag" class="flag-badge" src="" alt="Lippu">
+                <div class="country-label" id="right-country">Yhdysvallat</div>
+                <h2 class="country-name" id="right-name">LeBron James</h2>
+                <p class="subtitle-text">uran pisteet NBA:ssa ovat</p>
+
+                <!-- Arvauspainikkeet -->
+                <div class="controls" id="controls-box">
+                    <button class="guess-btn" id="btn-higher" onclick="makeGuess('higher')">
+                        Suurempi <span class="arrow-icon">▲</span>
+                    </button>
+                    <button class="guess-btn" id="btn-lower" onclick="makeGuess('lower')">
+                        Pienempi <span class="arrow-icon">▼</span>
+                    </button>
+                </div>
+
+                <!-- Paljastettu asukasluku -->
+                <div class="revealed-box" id="revealed-box">
+                    <div class="area-value" id="right-area">0</div>
+                    <p class="unit-text">pistettä</p>
+                </div>
+
+                <p class="comparison-caption" id="comparison-caption">
+                    kuin pelaajalla Lauri Markkanen
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Alareunan pistenäyttö -->
+    <footer class="bottom-hud">
+        <div id="high-score-display">Ennätys: 0</div>
+        <div id="score-display">Pisteet: 0</div>
+    </footer>
+
+    <!-- Game Over -ikkuna -->
+    <div class="gameover-overlay" id="gameover-overlay">
+        <div class="gameover-card">
+            <h2 class="gameover-title">Väärä arvaus!</h2>
+            <p class="gameover-fact" id="gameover-fact"></p>
+            <div class="score-summary">
+                <div class="score-stat">
+                    <span>Pisteet</span>
+                    <strong id="final-score">0</strong>
+                </div>
+                <div class="score-stat">
+                    <span>Ennätys</span>
+                    <strong id="final-highscore">0</strong>
+                </div>
+            </div>
+            <div class="gameover-actions">
+                <button class="play-again-btn" onclick="startNewGame()">Pelaa uudelleen</button>
+                <a href="lower-higher.html" class="menu-link-btn">← Takaisin pelikategorioihin</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const players = [
+            {
+                        "name": "LeBron James",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 43672,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/2544.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Kareem Abdul-Jabbar",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 38387,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/76003.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Karl Malone",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 36928,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/252.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Kobe Bryant",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 33643,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/977.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Kevin Durant",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 32986,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/201142.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Michael Jordan",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 32292,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/893.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Dirk Nowitzki",
+                        "country": "Saksa",
+                        "code": "de",
+                        "pts": 31560,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/1717.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Wilt Chamberlain",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 31419,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/76375.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "James Harden",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 29654,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/201935.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Shaquille O'Neal",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 28596,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/406.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Carmelo Anthony",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 28289,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/2546.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Moses Malone",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 27409,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/77449.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Elvin Hayes",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 27313,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/76979.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Russell Westbrook",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 27176,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/201566.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Hakeem Olajuwon",
+                        "country": "Nigeria",
+                        "code": "ng",
+                        "pts": 26946,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/165.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "DeMar DeRozan",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 26849,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/201942.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Stephen Curry",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 26806,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/201939.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Oscar Robertson",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 26710,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/600015.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Dominique Wilkins",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 26668,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/78497.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Tim Duncan",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 26496,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/1495.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Paul Pierce",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 26397,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/1718.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "John Havlicek",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 26395,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/76970.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Kevin Garnett",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 26071,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/708.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Vince Carter",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 25728,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/1713.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Alex English",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 25613,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/76681.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Reggie Miller",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 25279,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/397.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Jerry West",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 25192,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/78479.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Patrick Ewing",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 24815,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/121.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Ray Allen",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 24505,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/951.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Allen Iverson",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 24368,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/947.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Charles Barkley",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 23757,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/787.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Robert Parish",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 23334,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/77847.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Adrian Dantley",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 23177,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/76536.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Dwyane Wade",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 23165,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/2548.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Elgin Baylor",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 23149,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/76127.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Chris Paul",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 23058,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/101108.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Damian Lillard",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 22945,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/203081.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Clyde Drexler",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 22195,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/164.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Giannis Antetokounmpo",
+                        "country": "Kreikka",
+                        "code": "gr",
+                        "pts": 21954,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/203507.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Gary Payton",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 21813,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/56.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Larry Bird",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 21791,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/1449.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Hal Greer",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 21586,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/76885.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Walt Bellamy",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 20941,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/76153.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Pau Gasol",
+                        "country": "Espanja",
+                        "code": "es",
+                        "pts": 20894,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/2200.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Bob Pettit",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 20880,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/77857.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "David Robinson",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 20790,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/764.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "LaMarcus Aldridge",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 20558,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/200746.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Mitch Richmond",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 20497,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/732.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Joe Johnson",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 20407,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/2207.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Tom Chambers",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 20049,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/76367.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Antawn Jamison",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 20042,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/1712.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Anthony Davis",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 19787,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/203076.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "John Stockton",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 19711,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/1269.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Bernard King",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 19655,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/77193.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Paul George",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 19616,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/202331.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Dwight Howard",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 19485,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/2730.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Tony Parker",
+                        "country": "Ranska",
+                        "code": "fr",
+                        "pts": 19473,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/2225.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Scottie Pippen",
+                        "country": "Yhdysvallat",
+                        "code": "us",
+                        "pts": 18940,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/937.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Nikola Jokić",
+                        "country": "Serbia",
+                        "code": "rs",
+                        "pts": 18385,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/203999.png?imwidth=1040&imheight=760"
+            },
+            {
+                        "name": "Lauri Markkanen",
+                        "country": "Suomi",
+                        "code": "fi",
+                        "pts": 9341,
+                        "img": "https://cdn.nba.com/headshots/nba/latest/1040x760/1628374.png?imwidth=1040&imheight=760"
+            }
+];
+
+        let deck = [];
+        let leftPlayer = null;
+        let rightPlayer = null;
+        let score = 0;
+        let highScore = parseInt(localStorage.getItem('nbaPisteetHighScore') || '0', 10);
+        let isAnimating = false;
+
+        function formatNumber(num) {
+            return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        }
+
+        function shuffle(array) {
+            const copy = [...array];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function getNextPlayer(excludeName) {
+            if (deck.length === 0) {
+                deck = shuffle(players);
+            }
+            let next = deck.pop();
+            if (next.name === excludeName) {
+                if (deck.length === 0) deck = shuffle(players);
+                next = deck.pop();
+            }
+            return next;
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('score-display').textContent = `Pisteet: ${score}`;
+            document.getElementById('high-score-display').textContent = `Ennätys: ${highScore}`;
+        }
+
+        function renderRound() {
+            const leftFlagUrl = `https://flagcdn.com/w320/${leftPlayer.code}.png`;
+            const rightFlagUrl = `https://flagcdn.com/w320/${rightPlayer.code}.png`;
+
+            document.getElementById('left-bg-flag').src = leftPlayer.img;
+            document.getElementById('left-portrait').src = leftPlayer.img;
+            document.getElementById('left-portrait').alt = leftPlayer.name;
+            document.getElementById('left-flag').src = leftFlagUrl;
+            document.getElementById('left-country').textContent = leftPlayer.country;
+            document.getElementById('left-name').textContent = leftPlayer.name;
+            document.getElementById('left-area').textContent = formatNumber(leftPlayer.pts);
+
+            document.getElementById('right-bg-flag').src = rightPlayer.img;
+            document.getElementById('right-portrait').src = rightPlayer.img;
+            document.getElementById('right-portrait').alt = rightPlayer.name;
+            document.getElementById('right-flag').src = rightFlagUrl;
+            document.getElementById('right-country').textContent = rightPlayer.country;
+            document.getElementById('right-name').textContent = rightPlayer.name;
+            document.getElementById('comparison-caption').textContent = `kuin pelaajalla ${leftPlayer.name}`;
+
+            document.getElementById('controls-box').style.display = 'flex';
+            document.getElementById('revealed-box').classList.remove('visible');
+            document.getElementById('btn-higher').disabled = false;
+            document.getElementById('btn-lower').disabled = false;
+
+            const vsBadge = document.getElementById('vs-badge');
+            vsBadge.textContent = 'VS';
+            vsBadge.className = 'vs-badge';
+        }
+
+        function animateValue(element, start, end, duration, callback) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const current = easeOut * (end - start) + start;
+                element.textContent = formatNumber(Math.floor(current));
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    element.textContent = formatNumber(end);
+                    if (callback) callback();
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        function makeGuess(choice) {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            document.getElementById('btn-higher').disabled = true;
+            document.getElementById('btn-lower').disabled = true;
+            document.getElementById('controls-box').style.display = 'none';
+
+            const revealedBox = document.getElementById('revealed-box');
+            const rightAreaEl = document.getElementById('right-area');
+            revealedBox.classList.add('visible');
+
+            const isCorrect =
+                (choice === 'higher' && rightPlayer.pts >= leftPlayer.pts) ||
+                (choice === 'lower' && rightPlayer.pts <= leftPlayer.pts);
+
+            animateValue(rightAreaEl, 0, rightPlayer.pts, 900, () => {
+                const vsBadge = document.getElementById('vs-badge');
+
+                if (isCorrect) {
+                    vsBadge.textContent = '✓';
+                    vsBadge.classList.add('correct');
+                    score++;
+                    if (score > highScore) {
+                        highScore = score;
+                        localStorage.setItem('nbaPisteetHighScore', highScore.toString());
+                    }
+                    updateScoreDisplay();
+
+                    setTimeout(() => {
+                        leftPlayer = rightPlayer;
+                        rightPlayer = getNextPlayer(leftPlayer.name);
+                        isAnimating = false;
+                        renderRound();
+                    }, 1100);
+                } else {
+                    vsBadge.textContent = '✕';
+                    vsBadge.classList.add('wrong');
+
+                    setTimeout(() => {
+                        showGameOver();
+                        isAnimating = false;
+                    }, 1100);
+                }
+            });
+        }
+
+        function showGameOver() {
+            const diffText = rightPlayer.pts > leftPlayer.pts ? "enemmän" : "vähemmän";
+            document.getElementById('gameover-fact').textContent =
+                `Pelaajalla ${rightPlayer.name} (${formatNumber(rightPlayer.pts)} pistettä) on ${diffText} urapisteitä kuin pelaajalla ${leftPlayer.name} (${formatNumber(leftPlayer.pts)} pistettä).`;
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('final-highscore').textContent = highScore;
+            document.getElementById('gameover-overlay').classList.add('active');
+        }
+
+        function startNewGame() {
+            document.getElementById('gameover-overlay').classList.remove('active');
+            score = 0;
+            updateScoreDisplay();
+            deck = shuffle(players);
+            leftPlayer = deck.pop();
+            rightPlayer = getNextPlayer(leftPlayer.name);
+            renderRound();
+        }
+
+        startNewGame();
+    </script>
+</body>
+</html>
